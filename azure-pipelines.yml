@@ -84,7 +84,7 @@ jobs:
       $commitMessage = git log -1 --pretty=%B
 
       # amend commit message to skip build
-      git commit --amend -m "$commitMessage" > $null
+      git commit --amend -m "$commitMessage" -m "***NO_CI***" > $null
 
       # push all changes to github
       git -c http.extraheader="AUTHORIZATION: $auth" push --all origin
