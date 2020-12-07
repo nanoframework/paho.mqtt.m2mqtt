@@ -177,6 +177,8 @@ namespace uPLibrary.Networking.M2Mqtt
 
         // channel to communicate over the network
         private IMqttNetworkChannel channel;
+        //allow user to supply custom network channel
+        public IMqttNetworkChannel Channel { get => channel; set { channel = value; } }
 
         // inflight messages queue
         private Queue inflightQueue;
