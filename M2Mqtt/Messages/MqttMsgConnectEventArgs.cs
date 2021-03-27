@@ -15,11 +15,12 @@ Contributors:
 */
 
 #if (NANOFRAMEWORK_1_0)
-using nanoFramework.Runtime.Events;
-#elif (!MF_FRAMEWORK_VERSION_V4_2 && !MF_FRAMEWORK_VERSION_V4_3)
 using System;
-#else
+using nanoFramework.Runtime.Events;
+#elif (MF_FRAMEWORK_VERSION_V4_2 || MF_FRAMEWORK_VERSION_V4_3 || MF_FRAMEWORK_VERSION_V4_4)
 using Microsoft.SPOT;
+#else
+using System;
 #endif
 
 namespace uPLibrary.Networking.M2Mqtt.Messages
