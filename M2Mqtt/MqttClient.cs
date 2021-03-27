@@ -32,7 +32,7 @@ using nanoFramework.Runtime.Events;
 #if SSL
 using System.Net.Security;
 #endif
-#elif (MF_FRAMEWORK_VERSION_V4_2 || MF_FRAMEWORK_VERSION_V4_3)
+#elif (MF_FRAMEWORK_VERSION_V4_2 || MF_FRAMEWORK_VERSION_V4_3 || MF_FRAMEWORK_VERSION_V4_4)
 using Microsoft.SPOT;
 #if SSL
 using Microsoft.SPOT.Net.Security;
