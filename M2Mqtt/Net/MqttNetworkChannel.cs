@@ -491,8 +491,10 @@ namespace uPLibrary.Networking.M2Mqtt
                     return SslProtocols.Tls11;
                 case MqttSslProtocols.TLSv1_2:
                     return SslProtocols.Tls12;
-                // case MqttSslProtocols.TLSv1_3: // TODO: Support TLS 1.3 once base libraries catch up with the standard.
-                //     return SslProtocols.Tls13;
+#if NANOFRAMEWORK_1_0 //nanoFramework is awaiting support for this protocol.
+                case MqttSslProtocols.TLSv1_3:
+                    throw new ArgumentException("TLS 1.3 is currently disabled, awaiting support from OS/Device Firmware.");
+#endif
                default:
                     throw new ArgumentException("SSL/TLS protocol version not supported");
             }

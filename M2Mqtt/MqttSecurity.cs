@@ -43,7 +43,7 @@ namespace uPLibrary.Networking.M2Mqtt
         /// </summary>
         TLSv1_2,
         /// <summary>
-        /// TLS version 1.3 (currently unsupported)
+        /// TLS version 1.3
         /// </summary>
         TLSv1_3
     }
