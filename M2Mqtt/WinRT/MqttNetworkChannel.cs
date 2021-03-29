@@ -1,6 +1,5 @@
 ﻿/*
-Copyright (c) .NET Foundation and Contributors
-Portions Copyright (c) 2013, 2014 Paolo Patierno
+Copyright (c) 2013, 2014 Paolo Patierno
 
 All rights reserved. This program and the accompanying materials
 are made available under the terms of the Eclipse Public License v1.0
@@ -172,8 +171,6 @@ namespace uPLibrary.Networking.M2Mqtt
                     return SocketProtectionLevel.Tls11;
                 case MqttSslProtocols.TLSv1_2:
                     return SocketProtectionLevel.Tls12;
-                case MqttSslProtocols.TLSv1_3:
-                    return SocketProtectionLevel.Tls13;
                 default:
                     throw new ArgumentException("SSL/TLS protocol version not supported");
             }
