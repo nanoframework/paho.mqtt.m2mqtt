@@ -22,12 +22,16 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
+#if (NANOFRAMEWORK_1_0)
+[assembly: AssemblyTitle("nanoFramework M2Mqtt Client")]
+#else
 [assembly: AssemblyTitle("M2Mqtt")]
+#endif
 [assembly: AssemblyDescription("MQTT Client Library for M2M communication")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Paolo Patierno")]
 [assembly: AssemblyProduct("M2Mqtt")]
-[assembly: AssemblyCopyright("Copyright © Paolo Patierno 2014")]
+[assembly: AssemblyCopyright("Copyright © Paolo Patierno 2014 & .NET Foundation and Contributors")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
