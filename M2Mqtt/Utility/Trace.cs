@@ -23,7 +23,6 @@ namespace uPLibrary.Networking.M2Mqtt.Utility
     /// <summary>
     /// Tracing levels
     /// </summary>
-    [Flags]
     public enum TraceLevel
     {
         /// <summary>
