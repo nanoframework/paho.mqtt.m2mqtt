@@ -35,7 +35,7 @@ namespace uPLibrary.Networking.M2Mqtt
         /// <summary>
         /// Puts the thread to sleep
         /// </summary>
-        /// <param name="millisecondsTimeout"></param>
+        /// <param name="millisecondsTimeout">Timeout in Milliseconds</param>
         public static void SleepThread(int millisecondsTimeout)
         {
             Thread.Sleep(millisecondsTimeout);

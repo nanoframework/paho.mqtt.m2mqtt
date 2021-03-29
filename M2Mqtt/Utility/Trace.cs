@@ -71,10 +71,10 @@ namespace uPLibrary.Networking.M2Mqtt.Utility
         public static WriteTrace TraceListener;
 
         /// <summary>
-        /// 
+        /// Debug statement
         /// </summary>
-        /// <param name="format"></param>
-        /// <param name="args"></param>
+        /// <param name="format">Format of the string</param>
+        /// <param name="args">String arguments</param>
         [Conditional("DEBUG")]
         public static void Debug(string format, params object[] args)
         {
@@ -85,10 +85,10 @@ namespace uPLibrary.Networking.M2Mqtt.Utility
         }
 
         /// <summary>
-        /// 
+        /// Writes a line to the console
         /// </summary>
-        /// <param name="level"></param>
-        /// <param name="format"></param>
+        /// <param name="level">Trace level</param>
+        /// <param name="format">Format of the string</param>
         public static void WriteLine(TraceLevel level, string format)
         {
             if (TraceListener != null && (level & TraceLevel) > 0)
@@ -98,11 +98,11 @@ namespace uPLibrary.Networking.M2Mqtt.Utility
         }
 
         /// <summary>
-        /// 
+        /// Writes a line to the console
         /// </summary>
-        /// <param name="level"></param>
-        /// <param name="format"></param>
-        /// <param name="arg1"></param>
+        /// <param name="level">Trace level</param>
+        /// <param name="format">Format of the string</param>
+        /// <param name="arg1">First argument</param>
         public static void WriteLine(TraceLevel level, string format, object arg1)
         {
             if (TraceListener != null && (level & TraceLevel) > 0)
@@ -112,12 +112,12 @@ namespace uPLibrary.Networking.M2Mqtt.Utility
         }
 
         /// <summary>
-        /// 
+        /// Writes a line to the console
         /// </summary>
-        /// <param name="level"></param>
-        /// <param name="format"></param>
-        /// <param name="arg1"></param>
-        /// <param name="arg2"></param>
+        /// <param name="level">Trace level</param>
+        /// <param name="format">Format of the string</param>
+        /// <param name="arg1">First argument</param>
+        /// <param name="arg2">Second argument</param>
         public static void WriteLine(TraceLevel level, string format, object arg1, object arg2)
         {
             if (TraceListener != null && (level & TraceLevel) > 0)
@@ -127,13 +127,13 @@ namespace uPLibrary.Networking.M2Mqtt.Utility
         }
 
         /// <summary>
-        /// 
+        ///  Writes a line to the console
         /// </summary>
-        /// <param name="level"></param>
-        /// <param name="format"></param>
-        /// <param name="arg1"></param>
-        /// <param name="arg2"></param>
-        /// <param name="arg3"></param>
+        /// <param name="level">Trace level</param>
+        /// <param name="format">Format of the string</param>
+        /// <param name="arg1">First argument</param>
+        /// <param name="arg2">Second argument</param>
+        /// <param name="arg3">Third argument</param>
         public static void WriteLine(TraceLevel level, string format, object arg1, object arg2, object arg3)
         {
             if (TraceListener != null && (level & TraceLevel) > 0)
