@@ -1940,7 +1940,7 @@ namespace uPLibrary.Networking.M2Mqtt
                                 msgContext = (MqttMsgContext)this.inflightQueue.Dequeue();
 
                                 // get inflight message
-                                msgInflight = (MqttMsgBase)msgContext.Message;
+                                msgInflight = msgContext.Message;
 
                                 switch (msgContext.State)
                                 {
