@@ -151,23 +151,23 @@ namespace uPLibrary.Networking.M2Mqtt.Messages
         #endregion
 
         /// <summary>
-        /// message type
+        /// The Message type
         /// </summary>
         protected byte type;
         /// <summary>
-        /// duplicate delivery
+        /// Duplicate delivery flag
         /// </summary>
         internal protected bool dupFlag;
         /// <summary>
-        /// quality of service level
+        /// Quality of Service level
         /// </summary>
         internal protected byte qosLevel;
         /// <summary>
-        /// retain flag
+        /// The retain flag
         /// </summary>
         internal protected bool retain;
         /// <summary>
-        /// message identifier
+        /// The message identifier
         /// </summary>
         internal protected ushort messageId;
 
