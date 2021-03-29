@@ -491,6 +491,8 @@ namespace uPLibrary.Networking.M2Mqtt
                     return SslProtocols.Tls11;
                 case MqttSslProtocols.TLSv1_2:
                     return SslProtocols.Tls12;
+                case MqttSslProtocols.TLSv1_3:
+                    return SslProtocols.Tls13;
                default:
                     throw new ArgumentException("SSL/TLS protocol version not supported");
             }
