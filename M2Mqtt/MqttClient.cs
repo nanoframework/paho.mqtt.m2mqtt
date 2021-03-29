@@ -154,19 +154,19 @@ namespace uPLibrary.Networking.M2Mqtt
         private int lastCommTime;
 
         /// <summary>
-        /// event for PUBLISH message received
+        /// The event for PUBLISH message received
         /// </summary>
         public event MqttMsgPublishEventHandler MqttMsgPublishReceived;
         /// <summary>
-        /// event for published message
+        /// The event for published message
         /// </summary>
         public event MqttMsgPublishedEventHandler MqttMsgPublished;
         /// <summary>
-        /// event for subscribed topic
+        /// The event for subscribed topic
         /// </summary>
         public event MqttMsgSubscribedEventHandler MqttMsgSubscribed;
         /// <summary>
-        /// event for unsubscribed topic
+        /// The event for unsubscribed topic
         /// </summary>
         public event MqttMsgUnsubscribedEventHandler MqttMsgUnsubscribed;
 #if BROKER
@@ -181,7 +181,7 @@ namespace uPLibrary.Networking.M2Mqtt
 #endif
 
         /// <summary>
-        /// event for peer/client disconnection
+        /// The event for peer/client disconnection
         /// </summary>
         public event ConnectionClosedEventHandler ConnectionClosed;
 
