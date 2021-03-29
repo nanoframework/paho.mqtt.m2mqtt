@@ -39,24 +39,24 @@ namespace uPLibrary.Networking.M2Mqtt
         private readonly LocalCertificateSelectionCallback userCertificateSelectionCallback;
 #endif
         // remote host information
-        private string remoteHostName;
-        private IPAddress remoteIpAddress;
-        private int remotePort;
+        private readonly string remoteHostName;
+        private readonly IPAddress remoteIpAddress;
+        private readonly int remotePort;
 
         // socket for communication
         private Socket socket;
         // using SSL
-        private bool secure;
+        private readonly bool secure;
 
         // CA certificate (on client)
-        private X509Certificate caCert;
+        private readonly X509Certificate caCert;
         // Server certificate (on broker)
-        private X509Certificate serverCert;
+        private readonly X509Certificate serverCert;
         // client certificate (on client)
-        private X509Certificate clientCert;
+        private readonly X509Certificate clientCert;
 
         // SSL/TLS protocol version
-        private MqttSslProtocols sslProtocol;
+        private readonly MqttSslProtocols sslProtocol;
 
         /// <summary>
         /// Remote host name
