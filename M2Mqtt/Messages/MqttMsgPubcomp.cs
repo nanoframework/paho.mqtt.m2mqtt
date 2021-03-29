@@ -116,9 +116,9 @@ namespace uPLibrary.Networking.M2Mqtt.Messages
         }
 
         /// <summary>
-        /// Converts the default class string
+        /// Returns a string that represents the current object.
         /// </summary>
-        /// <returns>The string</returns>
+        /// <returns>A string that represents the current object.</returns>
         public override string ToString()
         {
 #if TRACE
