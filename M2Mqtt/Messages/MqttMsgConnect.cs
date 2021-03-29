@@ -244,7 +244,7 @@ namespace uPLibrary.Networking.M2Mqtt.Messages
         /// <param name="willMessage">Will message</param>
         /// <param name="cleanSession">Clean sessione flag</param>
         /// <param name="keepAlivePeriod">Keep alive period</param>
-        /// <param name="protocolVersion">Protocol version</param>
+        /// <param name="protocolVersion">MQTT Protocol version</param>
         public MqttMsgConnect(string clientId, 
             string username, 
             string password,
@@ -279,7 +279,7 @@ namespace uPLibrary.Networking.M2Mqtt.Messages
         /// Parse bytes for a CONNECT message
         /// </summary>
         /// <param name="fixedHeaderFirstByte">First fixed header byte</param>
-        /// <param name="protocolVersion">Protocol Version</param>
+        /// <param name="protocolVersion">MQTT Protocol Version</param>
         /// <param name="channel">Channel connected to the broker</param>
         /// <returns>CONNECT message instance</returns>
         public static MqttMsgConnect Parse(byte fixedHeaderFirstByte, byte protocolVersion, IMqttNetworkChannel channel)
