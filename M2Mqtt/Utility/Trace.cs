@@ -27,6 +27,10 @@ namespace uPLibrary.Networking.M2Mqtt.Utility
     public enum TraceLevel
     {
         /// <summary>
+        /// None
+        /// </summary>
+        None = 0x00,
+        /// <summary>
         /// Error
         /// </summary>
         Error = 0x01,
@@ -67,7 +71,7 @@ namespace uPLibrary.Networking.M2Mqtt.Utility
         /// <summary>
         /// Trace Level
         /// </summary>
-        public static TraceLevel TraceLevel;
+        public static TraceLevel TraceLevel = TraceLevel.None;
         /// <summary>
         /// Write Trace
         /// </summary>

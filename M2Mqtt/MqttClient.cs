@@ -722,7 +722,7 @@ namespace uPLibrary.Networking.M2Mqtt
                 // broker must send PINGRESP within timeout equal to keep alive period
                 return (MqttMsgPingResp)this.SendReceive(pingreq, this.keepAlivePeriod);
             }
-#if TRACE
+#if (TRACE || NANOFRAMEWORK_1_0)
             catch (Exception e)
             {
 
@@ -1053,7 +1053,7 @@ namespace uPLibrary.Networking.M2Mqtt
             }
             catch (Exception e)
             {
-#if TRACE
+#if (TRACE || NANOFRAMEWORK_1_0)
                 MqttUtility.Trace.WriteLine(TraceLevel.Error, "Exception occurred: {0}", e.ToString());
 #endif
 
@@ -1067,7 +1067,7 @@ namespace uPLibrary.Networking.M2Mqtt
         /// <param name="msg">Message</param>
         private void Send(MqttMsgBase msg)
         {
-#if TRACE
+#if (TRACE || NANOFRAMEWORK_1_0)
             MqttUtility.Trace.WriteLine(TraceLevel.Frame, "SEND {0}", msg);
 #endif
             this.Send(msg.GetBytes((byte)this.ProtocolVersion));
@@ -1111,7 +1111,7 @@ namespace uPLibrary.Networking.M2Mqtt
                         this.IsConnected = false;
                 }
 #endif
-#if TRACE
+#if (TRACE || NANOFRAMEWORK_1_0)
                 MqttUtility.Trace.WriteLine(TraceLevel.Error, "Exception occurred: {0}", e.ToString());
 #endif
 
@@ -1158,7 +1158,7 @@ namespace uPLibrary.Networking.M2Mqtt
         /// <returns>MQTT message response</returns>
         private MqttMsgBase SendReceive(MqttMsgBase msg, int timeout)
         {
-#if TRACE
+#if (TRACE || NANOFRAMEWORK_1_0)
             MqttUtility.Trace.WriteLine(TraceLevel.Frame, "SEND {0}", msg);
 #endif
             return this.SendReceive(msg.GetBytes((byte)this.ProtocolVersion), timeout);
@@ -1253,7 +1253,7 @@ namespace uPLibrary.Networking.M2Mqtt
                         // enqueue message and unlock send thread
                         this.inflightQueue.Enqueue(msgContext);
 
-#if TRACE
+#if (TRACE || NANOFRAMEWORK_1_0)
                         MqttUtility.Trace.WriteLine(TraceLevel.Queuing, "enqueued {0}", msg);
 #endif
 
@@ -1371,7 +1371,7 @@ namespace uPLibrary.Networking.M2Mqtt
                 lock (this.internalQueue)
                 {
                     this.internalQueue.Enqueue(msg);
-#if TRACE
+#if (TRACE || NANOFRAMEWORK_1_0)
                     MqttUtility.Trace.WriteLine(TraceLevel.Queuing, "enqueued {0}", msg);
 #endif
                     this.inflightWaitHandle.Set();
@@ -1412,7 +1412,7 @@ namespace uPLibrary.Networking.M2Mqtt
 
 #if BROKER
                                 MqttMsgConnect connect = MqttMsgConnect.Parse(fixedHeaderFirstByte[0], (byte)this.ProtocolVersion, this.channel);
-#if TRACE
+#if (TRACE || NANOFRAMEWORK_1_0)
                                 Trace.WriteLine(TraceLevel.Frame, "RECV {0}", connect);
 #endif
 
@@ -1430,7 +1430,7 @@ namespace uPLibrary.Networking.M2Mqtt
                                 throw new MqttClientException(MqttClientErrorCode.WrongBrokerMessage);
 #else
                                 this.msgReceived = MqttMsgConnack.Parse(fixedHeaderFirstByte[0], (byte)this.ProtocolVersion, this.channel);
-#if TRACE
+#if (TRACE || NANOFRAMEWORK_1_0)
                                 MqttUtility.Trace.WriteLine(TraceLevel.Frame, "RECV {0}", this.msgReceived);
 #endif
                                 this.syncEndReceiving.Set();
@@ -1442,7 +1442,7 @@ namespace uPLibrary.Networking.M2Mqtt
 
 #if BROKER
                                 this.msgReceived = MqttMsgPingReq.Parse(fixedHeaderFirstByte[0], (byte)this.ProtocolVersion, this.channel);
-#if TRACE
+#if (TRACE || NANOFRAMEWORK_1_0)
                                 Trace.WriteLine(TraceLevel.Frame, "RECV {0}", this.msgReceived);
 #endif
 
@@ -1461,7 +1461,7 @@ namespace uPLibrary.Networking.M2Mqtt
                                 throw new MqttClientException(MqttClientErrorCode.WrongBrokerMessage);
 #else
                                 this.msgReceived = MqttMsgPingResp.Parse(fixedHeaderFirstByte[0], (byte)this.ProtocolVersion, this.channel);
-#if TRACE
+#if (TRACE || NANOFRAMEWORK_1_0)
                                 MqttUtility.Trace.WriteLine(TraceLevel.Frame, "RECV {0}", this.msgReceived);
 #endif
                                 this.syncEndReceiving.Set();
@@ -1473,7 +1473,7 @@ namespace uPLibrary.Networking.M2Mqtt
 
 #if BROKER
                                 MqttMsgSubscribe subscribe = MqttMsgSubscribe.Parse(fixedHeaderFirstByte[0], (byte)this.ProtocolVersion, this.channel);
-#if TRACE
+#if (TRACE || NANOFRAMEWORK_1_0)
                                 Trace.WriteLine(TraceLevel.Frame, "RECV {0}", subscribe);
 #endif
 
@@ -1493,7 +1493,7 @@ namespace uPLibrary.Networking.M2Mqtt
 #else
                                 // enqueue SUBACK message received (for QoS Level 1) into the internal queue
                                 MqttMsgSuback suback = MqttMsgSuback.Parse(fixedHeaderFirstByte[0], (byte)this.ProtocolVersion, this.channel);
-#if TRACE
+#if (TRACE || NANOFRAMEWORK_1_0)
                                 MqttUtility.Trace.WriteLine(TraceLevel.Frame, "RECV {0}", suback);
 #endif
 
@@ -1507,7 +1507,7 @@ namespace uPLibrary.Networking.M2Mqtt
                             case MqttMsgBase.MQTT_MSG_PUBLISH_TYPE:
 
                                 MqttMsgPublish publish = MqttMsgPublish.Parse(fixedHeaderFirstByte[0], (byte)this.ProtocolVersion, this.channel);
-#if TRACE
+#if (TRACE || NANOFRAMEWORK_1_0)
                                 MqttUtility.Trace.WriteLine(TraceLevel.Frame, "RECV {0}", publish);
 #endif
 
@@ -1521,7 +1521,7 @@ namespace uPLibrary.Networking.M2Mqtt
 
                                 // enqueue PUBACK message received (for QoS Level 1) into the internal queue
                                 MqttMsgPuback puback = MqttMsgPuback.Parse(fixedHeaderFirstByte[0], (byte)this.ProtocolVersion, this.channel);
-#if TRACE
+#if (TRACE || NANOFRAMEWORK_1_0)
                                 MqttUtility.Trace.WriteLine(TraceLevel.Frame, "RECV {0}", puback);
 #endif
 
@@ -1535,7 +1535,7 @@ namespace uPLibrary.Networking.M2Mqtt
 
                                 // enqueue PUBREC message received (for QoS Level 2) into the internal queue
                                 MqttMsgPubrec pubrec = MqttMsgPubrec.Parse(fixedHeaderFirstByte[0], (byte)this.ProtocolVersion, this.channel);
-#if TRACE
+#if (TRACE || NANOFRAMEWORK_1_0)
                                 MqttUtility.Trace.WriteLine(TraceLevel.Frame, "RECV {0}", pubrec);
 #endif
 
@@ -1549,7 +1549,7 @@ namespace uPLibrary.Networking.M2Mqtt
 
                                 // enqueue PUBREL message received (for QoS Level 2) into the internal queue
                                 MqttMsgPubrel pubrel = MqttMsgPubrel.Parse(fixedHeaderFirstByte[0], (byte)this.ProtocolVersion, this.channel);
-#if TRACE
+#if (TRACE || NANOFRAMEWORK_1_0)
                                 MqttUtility.Trace.WriteLine(TraceLevel.Frame, "RECV {0}", pubrel);
 #endif
 
@@ -1563,7 +1563,7 @@ namespace uPLibrary.Networking.M2Mqtt
 
                                 // enqueue PUBCOMP message received (for QoS Level 2) into the internal queue
                                 MqttMsgPubcomp pubcomp = MqttMsgPubcomp.Parse(fixedHeaderFirstByte[0], (byte)this.ProtocolVersion, this.channel);
-#if TRACE
+#if (TRACE || NANOFRAMEWORK_1_0)
                                 MqttUtility.Trace.WriteLine(TraceLevel.Frame, "RECV {0}", pubcomp);
 #endif
 
@@ -1577,7 +1577,7 @@ namespace uPLibrary.Networking.M2Mqtt
 
 #if BROKER
                                 MqttMsgUnsubscribe unsubscribe = MqttMsgUnsubscribe.Parse(fixedHeaderFirstByte[0], (byte)this.ProtocolVersion, this.channel);
-#if TRACE
+#if (TRACE || NANOFRAMEWORK_1_0)
                                 Trace.WriteLine(TraceLevel.Frame, "RECV {0}", unsubscribe);
 #endif
 
@@ -1597,7 +1597,7 @@ namespace uPLibrary.Networking.M2Mqtt
 #else
                                 // enqueue UNSUBACK message received (for QoS Level 1) into the internal queue
                                 MqttMsgUnsuback unsuback = MqttMsgUnsuback.Parse(fixedHeaderFirstByte[0], (byte)this.ProtocolVersion, this.channel);
-#if TRACE
+#if (TRACE || NANOFRAMEWORK_1_0)
                                 MqttUtility.Trace.WriteLine(TraceLevel.Frame, "RECV {0}", unsuback);
 #endif
 
@@ -1612,7 +1612,7 @@ namespace uPLibrary.Networking.M2Mqtt
 
 #if BROKER
                                 MqttMsgDisconnect disconnect = MqttMsgDisconnect.Parse(fixedHeaderFirstByte[0], (byte)this.ProtocolVersion, this.channel);
-#if TRACE
+#if (TRACE || NANOFRAMEWORK_1_0)
                                 Trace.WriteLine(TraceLevel.Frame, "RECV {0}", disconnect);
 #endif
 
@@ -1640,7 +1640,7 @@ namespace uPLibrary.Networking.M2Mqtt
                 }
                 catch (Exception e)
                 {
-#if TRACE
+#if (TRACE || NANOFRAMEWORK_1_0)
                     MqttUtility.Trace.WriteLine(TraceLevel.Error, "Exception occurred: {0}", e.ToString());
 #endif
                     this.exReceiving = new MqttCommunicationException(e);
@@ -1967,7 +1967,7 @@ namespace uPLibrary.Networking.M2Mqtt
                                             this.OnInternalEvent(internalEvent);
                                         }
 
-#if TRACE
+#if (TRACE || NANOFRAMEWORK_1_0)
                                         MqttUtility.Trace.WriteLine(TraceLevel.Queuing, "processed {0}", msgInflight);
 #endif
                                         break;
@@ -2020,7 +2020,7 @@ namespace uPLibrary.Networking.M2Mqtt
                                             // notify published message from broker and acknowledged
                                             this.OnInternalEvent(internalEvent);
 
-#if TRACE
+#if (TRACE || NANOFRAMEWORK_1_0)
                                             MqttUtility.Trace.WriteLine(TraceLevel.Queuing, "processed {0}", msgInflight);
 #endif
                                         }
@@ -2093,7 +2093,7 @@ namespace uPLibrary.Networking.M2Mqtt
                                                         this.internalQueue.Dequeue();
                                                         acknowledge = true;
                                                         msgReceivedProcessed = true;
-#if TRACE
+#if (TRACE || NANOFRAMEWORK_1_0)
                                                         MqttUtility.Trace.WriteLine(TraceLevel.Queuing, "dequeued {0}", msgReceived);
 #endif
                                                     }
@@ -2119,7 +2119,7 @@ namespace uPLibrary.Networking.M2Mqtt
                                                         this.session.InflightMessages.Remove(msgContext.Key);
                                                     }
 
-#if TRACE
+#if (TRACE || NANOFRAMEWORK_1_0)
                                                     MqttUtility.Trace.WriteLine(TraceLevel.Queuing, "processed {0}", msgInflight);
 #endif
                                                 }
@@ -2207,7 +2207,7 @@ namespace uPLibrary.Networking.M2Mqtt
                                                         this.internalQueue.Dequeue();
                                                         acknowledge = true;
                                                         msgReceivedProcessed = true;
-#if TRACE
+#if (TRACE || NANOFRAMEWORK_1_0)
                                                         MqttUtility.Trace.WriteLine(TraceLevel.Queuing, "dequeued {0}", msgReceived);
 #endif
                                                     }
@@ -2303,7 +2303,7 @@ namespace uPLibrary.Networking.M2Mqtt
                                                         // received message processed
                                                         this.internalQueue.Dequeue();
                                                         msgReceivedProcessed = true;
-#if TRACE
+#if (TRACE || NANOFRAMEWORK_1_0)
                                                         MqttUtility.Trace.WriteLine(TraceLevel.Queuing, "dequeued {0}", msgReceived);
 #endif
                                                     }
@@ -2331,7 +2331,7 @@ namespace uPLibrary.Networking.M2Mqtt
                                                         this.session.InflightMessages.Remove(msgContext.Key);
                                                     }
 
-#if TRACE
+#if (TRACE || NANOFRAMEWORK_1_0)
                                                     MqttUtility.Trace.WriteLine(TraceLevel.Queuing, "processed {0}", msgInflight);
 #endif
                                                 }
@@ -2373,7 +2373,7 @@ namespace uPLibrary.Networking.M2Mqtt
                                                         this.internalQueue.Dequeue();
                                                         acknowledge = true;
                                                         msgReceivedProcessed = true;
-#if TRACE
+#if (TRACE || NANOFRAMEWORK_1_0)
                                                         MqttUtility.Trace.WriteLine(TraceLevel.Queuing, "dequeued {0}", msgReceived);
 #endif
                                                     }
@@ -2394,7 +2394,7 @@ namespace uPLibrary.Networking.M2Mqtt
                                                         this.session.InflightMessages.Remove(msgContext.Key);
                                                     }
 
-#if TRACE
+#if (TRACE || NANOFRAMEWORK_1_0)
                                                     MqttUtility.Trace.WriteLine(TraceLevel.Queuing, "processed {0}", msgInflight);
 #endif
                                                 }
@@ -2412,7 +2412,7 @@ namespace uPLibrary.Networking.M2Mqtt
                                                         this.internalQueue.Dequeue();
                                                         acknowledge = true;
                                                         msgReceivedProcessed = true;
-#if TRACE
+#if (TRACE || NANOFRAMEWORK_1_0)
                                                         MqttUtility.Trace.WriteLine(TraceLevel.Queuing, "dequeued {0}", msgReceived);
 #endif
 
@@ -2527,7 +2527,7 @@ namespace uPLibrary.Networking.M2Mqtt
                             if ((msgReceived != null) && !msgReceivedProcessed)
                             {
                                 this.internalQueue.Dequeue();
-#if TRACE
+#if (TRACE || NANOFRAMEWORK_1_0)
                                 MqttUtility.Trace.WriteLine(TraceLevel.Queuing, "dequeued {0} orphan", msgReceived);
 #endif
                             }
@@ -2542,7 +2542,7 @@ namespace uPLibrary.Networking.M2Mqtt
                     // re-enqueue message
                     this.inflightQueue.Enqueue(msgContext);
 
-#if TRACE
+#if (TRACE || NANOFRAMEWORK_1_0)
                 MqttUtility.Trace.WriteLine(TraceLevel.Error, "Exception occurred: {0}", e.ToString());
 #endif
 

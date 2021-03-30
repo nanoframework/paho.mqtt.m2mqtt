@@ -273,7 +273,7 @@ namespace uPLibrary.Networking.M2Mqtt.Messages
         /// <returns>A string that represents the current object.</returns>
         public override string ToString()
         {
-#if TRACE
+#if (TRACE || NANOFRAMEWORK_1_0)
             return this.GetTraceString(
                 "PUBLISH",
                 new object[] { "messageId", "topic", "message" },
