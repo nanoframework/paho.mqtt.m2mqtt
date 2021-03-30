@@ -2535,8 +2535,13 @@ namespace uPLibrary.Networking.M2Mqtt
                     }
                 }
             }
+#if (TRACE || NANOFRAMEWORK_1_0)
+            catch (MqttCommunicationException e)
+            {
+#else
             catch (MqttCommunicationException)
             {
+#endif
                 // possible exception on Send, I need to re-enqueue not sent message
                 if (msgContext != null)
                     // re-enqueue message
