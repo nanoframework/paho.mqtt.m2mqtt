@@ -823,8 +823,10 @@ namespace uPLibrary.Networking.M2Mqtt
         public ushort Subscribe(string[] topics, byte[] qosLevels)
         {
             MqttMsgSubscribe subscribe =
-                new MqttMsgSubscribe(topics, qosLevels);
-            subscribe.MessageId = this.GetMessageId();
+                new MqttMsgSubscribe(topics, qosLevels)
+                {
+                    MessageId = this.GetMessageId()
+                };
 
             // enqueue subscribe request into the inflight queue
             this.EnqueueInflight(subscribe, MqttMsgFlow.ToPublish);
@@ -840,8 +842,10 @@ namespace uPLibrary.Networking.M2Mqtt
         public ushort Unsubscribe(string[] topics)
         {
             MqttMsgUnsubscribe unsubscribe =
-                new MqttMsgUnsubscribe(topics);
-            unsubscribe.MessageId = this.GetMessageId();
+                new MqttMsgUnsubscribe(topics)
+                {
+                    MessageId = this.GetMessageId()
+                };
 
             // enqueue unsubscribe request into the inflight queue
             this.EnqueueInflight(unsubscribe, MqttMsgFlow.ToPublish);
@@ -871,8 +875,10 @@ namespace uPLibrary.Networking.M2Mqtt
         public ushort Publish(string topic, byte[] message, byte qosLevel, bool retain)
         {
             MqttMsgPublish publish =
-                    new MqttMsgPublish(topic, message, false, qosLevel, retain);
-            publish.MessageId = this.GetMessageId();
+                    new MqttMsgPublish(topic, message, false, qosLevel, retain)
+                    {
+                        MessageId = this.GetMessageId()
+                    };
 
             // enqueue message to publish into the inflight queue
             bool enqueue = this.EnqueueInflight(publish, MqttMsgFlow.ToPublish);
@@ -1306,8 +1312,10 @@ namespace uPLibrary.Networking.M2Mqtt
                     // we need to re-send PUBCOMP only
                     if (msgCtx == null)
                     {
-                        MqttMsgPubcomp pubcomp = new MqttMsgPubcomp();
-                        pubcomp.MessageId = msg.MessageId;
+                        MqttMsgPubcomp pubcomp = new MqttMsgPubcomp
+                        {
+                            MessageId = msg.MessageId
+                        };
 
                         this.Send(pubcomp);
 
@@ -2001,8 +2009,10 @@ namespace uPLibrary.Networking.M2Mqtt
                                         // QoS 1, PUBLISH message received from broker to acknowledge, send PUBACK
                                         else if (msgContext.Flow == MqttMsgFlow.ToAcknowledge)
                                         {
-                                            MqttMsgPuback puback = new MqttMsgPuback();
-                                            puback.MessageId = msgInflight.MessageId;
+                                            MqttMsgPuback puback = new MqttMsgPuback
+                                            {
+                                                MessageId = msgInflight.MessageId
+                                            };
 
                                             this.Send(puback);
 
@@ -2039,8 +2049,10 @@ namespace uPLibrary.Networking.M2Mqtt
                                         // QoS 2, PUBLISH message received from broker to acknowledge, send PUBREC, state change to wait PUBREL
                                         else if (msgContext.Flow == MqttMsgFlow.ToAcknowledge)
                                         {
-                                            MqttMsgPubrec pubrec = new MqttMsgPubrec();
-                                            pubrec.MessageId = msgInflight.MessageId;
+                                            MqttMsgPubrec pubrec = new MqttMsgPubrec
+                                            {
+                                                MessageId = msgInflight.MessageId
+                                            };
 
                                             msgContext.State = MqttMsgState.WaitForPubrel;
 
@@ -2200,8 +2212,10 @@ namespace uPLibrary.Networking.M2Mqtt
 #endif
                                                     }
 
-                                                    MqttMsgPubrel pubrel = new MqttMsgPubrel();
-                                                    pubrel.MessageId = msgInflight.MessageId;
+                                                    MqttMsgPubrel pubrel = new MqttMsgPubrel
+                                                    {
+                                                        MessageId = msgInflight.MessageId
+                                                    };
 
                                                     msgContext.State = MqttMsgState.WaitForPubcomp;
                                                     msgContext.Timestamp = Environment.TickCount;
@@ -2294,8 +2308,10 @@ namespace uPLibrary.Networking.M2Mqtt
 #endif
                                                     }
 
-                                                    MqttMsgPubcomp pubcomp = new MqttMsgPubcomp();
-                                                    pubcomp.MessageId = msgInflight.MessageId;
+                                                    MqttMsgPubcomp pubcomp = new MqttMsgPubcomp
+                                                    {
+                                                        MessageId = msgInflight.MessageId
+                                                    };
 
                                                     this.Send(pubcomp);
 
@@ -2466,8 +2482,10 @@ namespace uPLibrary.Networking.M2Mqtt
                                         // QoS 2, PUBREL message to send to broker, state change to wait PUBCOMP
                                         if (msgContext.Flow == MqttMsgFlow.ToPublish)
                                         {
-                                            MqttMsgPubrel pubrel = new MqttMsgPubrel();
-                                            pubrel.MessageId = msgInflight.MessageId;
+                                            MqttMsgPubrel pubrel = new MqttMsgPubrel
+                                            {
+                                                MessageId = msgInflight.MessageId
+                                            };
 
                                             msgContext.State = MqttMsgState.WaitForPubcomp;
                                             msgContext.Timestamp = Environment.TickCount;
