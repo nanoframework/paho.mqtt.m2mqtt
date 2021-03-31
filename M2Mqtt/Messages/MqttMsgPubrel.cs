@@ -138,7 +138,7 @@ namespace uPLibrary.Networking.M2Mqtt.Messages
         /// <returns>A string that represents the current object.</returns>
         public override string ToString()
         {
-#if TRACE 
+#if TRACE
             return this.GetTraceString(
                 "PUBREL",
                 new object[] { "messageId" },

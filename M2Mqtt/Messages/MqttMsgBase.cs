@@ -221,7 +221,7 @@ namespace uPLibrary.Networking.M2Mqtt.Messages
             return value;
         }
 
-#if TRACE 
+#if TRACE
         /// <summary>
         /// Returns a string representation of the message for tracing
         /// </summary>
