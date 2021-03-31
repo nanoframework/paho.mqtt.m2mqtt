@@ -12,11 +12,12 @@ and the Eclipse Distribution License is available at
 
 Contributors:
    Paolo Patierno - initial API and implementation and/or initial documentation
+   .NET Foundation and Contributors - nanoFramework support
 */
 
 using System;
 // if NOT .Net Micro Framework
-#if (!MF_FRAMEWORK_VERSION_V4_2 && !MF_FRAMEWORK_VERSION_V4_3 && !NANOFRAMEWORK_1_0)
+#if (!MF_FRAMEWORK_VERSION_V4_2 && !MF_FRAMEWORK_VERSION_V4_3 && !MF_FRAMEWORK_VERSION_V4_4 && !NANOFRAMEWORK_1_0)
 using System.Collections.Generic;
 #endif
 using System.Collections;
@@ -85,7 +86,7 @@ namespace uPLibrary.Networking.M2Mqtt.Messages
         /// Parse bytes for a SUBSCRIBE message
         /// </summary>
         /// <param name="fixedHeaderFirstByte">First fixed header byte</param>
-        /// <param name="protocolVersion">Protocol Version</param>
+        /// <param name="protocolVersion">MQTT Protocol Version</param>
         /// <param name="channel">Channel connected to the broker</param>
         /// <returns>SUBSCRIBE message instance</returns>
         public static MqttMsgSubscribe Parse(byte fixedHeaderFirstByte, byte protocolVersion, IMqttNetworkChannel channel)
@@ -130,7 +131,7 @@ namespace uPLibrary.Networking.M2Mqtt.Messages
             // NOTE : before, I don't know how many topics will be in the payload (so use List)
 
             // if .Net Micro Framework
-#if (MF_FRAMEWORK_VERSION_V4_2 || MF_FRAMEWORK_VERSION_V4_3 || NANOFRAMEWORK_1_0)
+#if (MF_FRAMEWORK_VERSION_V4_2 || MF_FRAMEWORK_VERSION_V4_3 || MF_FRAMEWORK_VERSION_V4_4 || NANOFRAMEWORK_1_0)
             IList tmpTopics = new ArrayList();
             IList tmpQosLevels = new ArrayList();
 // else other frameworks (.Net, .Net Compact, Mono, Windows Phone) 
@@ -165,6 +166,11 @@ namespace uPLibrary.Networking.M2Mqtt.Messages
             return msg;
         }
 
+        /// <summary>
+        /// Returns the bytes that represents the current object.
+        /// </summary>
+        /// <param name="protocolVersion">MQTT protocol version</param>
+        /// <returns>An array of bytes that represents the current object.</returns>
         public override byte[] GetBytes(byte protocolVersion)
         {
             int fixedHeaderSize = 0;
@@ -215,7 +221,7 @@ namespace uPLibrary.Networking.M2Mqtt.Messages
             do
             {
                 fixedHeaderSize++;
-                temp = temp / 128;
+                temp /= 128;
             } while (temp > 0);
 
             // allocate buffer for message
@@ -257,6 +263,10 @@ namespace uPLibrary.Networking.M2Mqtt.Messages
             return buffer;
         }
 
+        /// <summary>
+        /// Returns a string that represents the current object.
+        /// </summary>
+        /// <returns>A string that represents the current object.</returns>
         public override string ToString()
         {
 #if TRACE

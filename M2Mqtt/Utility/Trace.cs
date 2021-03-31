@@ -12,8 +12,10 @@ and the Eclipse Distribution License is available at
 
 Contributors:
    Paolo Patierno - initial API and implementation and/or initial documentation
+   .NET Foundation and Contributors - nanoFramework support
 */
 
+using System;
 using System.Diagnostics;
 
 namespace uPLibrary.Networking.M2Mqtt.Utility
@@ -23,15 +25,41 @@ namespace uPLibrary.Networking.M2Mqtt.Utility
     /// </summary>
     public enum TraceLevel
     {
+        /// <summary>
+        /// None
+        /// </summary>
+        None = 0x00,
+        /// <summary>
+        /// Error
+        /// </summary>
         Error = 0x01,
-        Warning = 0x02,
-        Information = 0x04,
+        /// <summary>
+        /// Warning
+        /// </summary>
+        Warning = 0x03,
+        /// <summary>
+        /// Information
+        /// </summary>
+        Information = 0x07,
+        /// <summary>
+        /// Verbose
+        /// </summary>
         Verbose = 0x0F,
+        /// <summary>
+        /// Frame
+        /// </summary>
         Frame = 0x10,
+        /// <summary>
+        /// Queuing
+        /// </summary>
         Queuing = 0x20
     }
 
-    // delegate for writing trace
+    /// <summary>
+    /// The callback to invoke to write traces.
+    /// </summary>
+    /// <param name="format">The format string for the arguments.</param>
+    /// <param name="args">The arguments attached to the trace event.</param>
     public delegate void WriteTrace(string format, params object[] args);
 
     /// <summary>
@@ -39,9 +67,20 @@ namespace uPLibrary.Networking.M2Mqtt.Utility
     /// </summary>
     public static class Trace
     {
-        public static TraceLevel TraceLevel;
+        /// <summary>
+        /// Trace Level
+        /// </summary>
+        public static TraceLevel TraceLevel { get; set; }
+        /// <summary>
+        /// Write Trace
+        /// </summary>
         public static WriteTrace TraceListener;
 
+        /// <summary>
+        /// Debug statement
+        /// </summary>
+        /// <param name="format">Format of the string</param>
+        /// <param name="args">String arguments</param>
         [Conditional("DEBUG")]
         public static void Debug(string format, params object[] args)
         {
@@ -51,6 +90,12 @@ namespace uPLibrary.Networking.M2Mqtt.Utility
             }
         }
 
+        /// <summary>
+        /// Writes a line to the console
+        /// </summary>
+        /// <param name="level">Trace level</param>
+        /// <param name="format">Format of the string</param>
+        [Conditional("TRACE")]
         public static void WriteLine(TraceLevel level, string format)
         {
             if (TraceListener != null && (level & TraceLevel) > 0)
@@ -59,6 +104,13 @@ namespace uPLibrary.Networking.M2Mqtt.Utility
             }
         }
 
+        /// <summary>
+        /// Writes a line to the console
+        /// </summary>
+        /// <param name="level">Trace level</param>
+        /// <param name="format">Format of the string</param>
+        /// <param name="arg1">First argument</param>
+        [Conditional("TRACE")]
         public static void WriteLine(TraceLevel level, string format, object arg1)
         {
             if (TraceListener != null && (level & TraceLevel) > 0)
@@ -67,6 +119,14 @@ namespace uPLibrary.Networking.M2Mqtt.Utility
             }
         }
 
+        /// <summary>
+        /// Writes a line to the console
+        /// </summary>
+        /// <param name="level">Trace level</param>
+        /// <param name="format">Format of the string</param>
+        /// <param name="arg1">First argument</param>
+        /// <param name="arg2">Second argument</param>
+        [Conditional("TRACE")]
         public static void WriteLine(TraceLevel level, string format, object arg1, object arg2)
         {
             if (TraceListener != null && (level & TraceLevel) > 0)
@@ -75,6 +135,14 @@ namespace uPLibrary.Networking.M2Mqtt.Utility
             }
         }
 
+        /// <summary>
+        ///  Writes a line to the console
+        /// </summary>
+        /// <param name="level">Trace level</param>
+        /// <param name="format">Format of the string</param>
+        /// <param name="arg1">First argument</param>
+        /// <param name="arg2">Second argument</param>
+        /// <param name="arg3">Third argument</param>
         public static void WriteLine(TraceLevel level, string format, object arg1, object arg2, object arg3)
         {
             if (TraceListener != null && (level & TraceLevel) > 0)
