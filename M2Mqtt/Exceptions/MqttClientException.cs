@@ -12,6 +12,7 @@ and the Eclipse Distribution License is available at
 
 Contributors:
    Paolo Patierno - initial API and implementation and/or initial documentation
+   .NET Foundation and Contributors - nanoFramework support
 */
 
 using System;
@@ -29,20 +30,13 @@ namespace uPLibrary.Networking.M2Mqtt.Exceptions
         /// <param name="errorCode">Error code</param>
         public MqttClientException(MqttClientErrorCode errorCode)
         {
-            this.errorCode = errorCode;
+            ErrorCode = errorCode;
         }
-
-        // error code
-        private MqttClientErrorCode errorCode;
 
         /// <summary>
         /// Error code
         /// </summary>
-        public MqttClientErrorCode ErrorCode
-        {
-            get { return this.errorCode; }
-            set { this.errorCode = value; }
-        }
+        public MqttClientErrorCode ErrorCode { get; set; }   
     }
 
     /// <summary>

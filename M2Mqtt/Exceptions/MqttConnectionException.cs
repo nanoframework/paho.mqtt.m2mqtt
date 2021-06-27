@@ -12,6 +12,7 @@ and the Eclipse Distribution License is available at
 
 Contributors:
    Paolo Patierno - initial API and implementation and/or initial documentation
+   .NET Foundation and Contributors - nanoFramework support
 */
 
 using System;
@@ -30,7 +31,6 @@ namespace uPLibrary.Networking.M2Mqtt.Exceptions
         /// <param name="innerException">Detail on why the exception occured</param>
         public MqttConnectionException(string message, Exception innerException)
             : base(message, innerException)
-        {
-        }
+        { }
     }
 }

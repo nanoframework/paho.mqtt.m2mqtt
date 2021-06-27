@@ -12,6 +12,7 @@ and the Eclipse Distribution License is available at
 
 Contributors:
    Paolo Patierno - initial API and implementation and/or initial documentation
+   .NET Foundation and Contributors - nanoFramework support
 */
 
 using System;
@@ -101,75 +102,30 @@ namespace uPLibrary.Networking.M2Mqtt.Messages
 
         #endregion
 
-        #region Properties...
-
         /// <summary>
         /// Message type
         /// </summary>
-        public byte Type
-        {
-            get { return this.type; }
-            set { this.type = value; }
-        }
+        public byte Type { get; set; }
 
         /// <summary>
         /// Duplicate message flag
         /// </summary>
-        public bool DupFlag
-        {
-            get { return this.dupFlag; }
-            set { this.dupFlag = value; }
-        }
+        public bool DupFlag { get; set; }
 
         /// <summary>
         /// Quality of Service level
         /// </summary>
-        public byte QosLevel
-        {
-            get { return this.qosLevel; }
-            set { this.qosLevel = value; }
-        }
+        public byte QosLevel { get; set; }
 
         /// <summary>
         /// Retain message flag
         /// </summary>
-        public bool Retain
-        {
-            get { return this.retain; }
-            set { this.retain = value; }
-        }
+        public bool Retain { get; set; }
 
         /// <summary>
         /// Message identifier for the message
         /// </summary>
-        public ushort MessageId
-        {
-            get { return this.messageId; }
-            set { this.messageId = value; }
-        }
-
-        #endregion
-
-        /// <summary>
-        /// The Message type
-        /// </summary>
-        protected byte type;
-        /// <summary>
-        /// Duplicate delivery flag
-        /// </summary>
-        internal protected bool dupFlag;
-        /// <summary>
-        /// Quality of Service level
-        /// </summary>
-        internal protected byte qosLevel;
-        /// <summary>
-        /// The retain flag
-        /// </summary>
-        internal protected bool retain;
-        /// <summary>
-        /// The message identifier
-        /// </summary>
-        internal protected ushort messageId;
+        public ushort MessageId { get; set; }
 
         /// <summary>
         /// Returns message bytes rapresentation
@@ -185,7 +141,7 @@ namespace uPLibrary.Networking.M2Mqtt.Messages
         /// <param name="buffer">Message buffer for inserting encoded value</param>
         /// <param name="index">Index from which insert encoded value into buffer</param>
         /// <returns>Index updated</returns>
-        protected int encodeRemainingLength(int remainingLength, byte[] buffer, int index)
+        protected int EncodeRemainingLength(int remainingLength, byte[] buffer, int index)
         {
             int digit = 0;
             do
@@ -204,7 +160,7 @@ namespace uPLibrary.Networking.M2Mqtt.Messages
         /// </summary>
         /// <param name="channel">Channel from reading bytes</param>
         /// <returns>Decoded remaining length</returns>
-        protected static int decodeRemainingLength(IMqttNetworkChannel channel)
+        protected static int DecodeRemainingLength(IMqttNetworkChannel channel)
         {
             int multiplier = 1;
             int value = 0;

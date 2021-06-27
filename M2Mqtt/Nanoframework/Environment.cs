@@ -1,4 +1,7 @@
-﻿#if (NANOFRAMEWORK_1_0)
+﻿/*
+Contributors:   
+   .NET Foundation and Contributors - nanoFramework support
+*/
 
 namespace System
 {
@@ -10,5 +13,3 @@ namespace System
         }
     }
 }
-
-#endif

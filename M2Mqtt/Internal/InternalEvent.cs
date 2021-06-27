@@ -12,6 +12,7 @@ and the Eclipse Distribution License is available at
 
 Contributors:
    Paolo Patierno - initial API and implementation and/or initial documentation
+   .NET Foundation and Contributors - nanoFramework support
 */
 
 namespace uPLibrary.Networking.M2Mqtt.Internal
@@ -20,6 +21,5 @@ namespace uPLibrary.Networking.M2Mqtt.Internal
     /// Generic internal event for dispatching
     /// </summary>
     public abstract class InternalEvent
-    {
-    }
+    { }
 }
