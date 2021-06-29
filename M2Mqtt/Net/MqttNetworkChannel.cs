@@ -21,7 +21,7 @@ using System.Net;
 using System.Security.Cryptography.X509Certificates;
 using System;
 
-namespace uPLibrary.Networking.M2Mqtt
+namespace nanoFramework.M2Mqtt
 {
     /// <summary>
     /// Channel to communicate over the network
@@ -246,6 +246,8 @@ namespace uPLibrary.Networking.M2Mqtt
             if (_secure)
             {
                 _sslStream.Close();
+                _sslStream.Dispose();
+                _sslStream = null;
             }
 
             _socket.Close();

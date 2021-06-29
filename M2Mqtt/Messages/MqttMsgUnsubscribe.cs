@@ -18,9 +18,9 @@ Contributors:
 using System;
 using System.Collections;
 using System.Text;
-using uPLibrary.Networking.M2Mqtt.Exceptions;
+using nanoFramework.M2Mqtt.Exceptions;
 
-namespace uPLibrary.Networking.M2Mqtt.Messages
+namespace nanoFramework.M2Mqtt.Messages
 {
     /// <summary>
     /// Class for UNSUBSCRIBE message from client to broker
@@ -51,7 +51,7 @@ namespace uPLibrary.Networking.M2Mqtt.Messages
             Topics = topics;
 
             // UNSUBSCRIBE message uses QoS Level 1 (not "officially" in 3.1.1)
-            QosLevel = QOS_LEVEL_AT_LEAST_ONCE;
+            QosLevel = (byte)MqttQoSLevel.AtLeastOnce;
         }
 
         /// <summary>

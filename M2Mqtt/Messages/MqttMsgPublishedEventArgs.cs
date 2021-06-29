@@ -21,7 +21,7 @@ using Microsoft.SPOT;
 using System;
 #endif
 
-namespace uPLibrary.Networking.M2Mqtt.Messages
+namespace nanoFramework.M2Mqtt.Messages
 {
     /// <summary>
     /// Event Args class for published message

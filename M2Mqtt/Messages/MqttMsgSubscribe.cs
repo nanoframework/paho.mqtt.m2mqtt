@@ -16,15 +16,11 @@ Contributors:
 */
 
 using System;
-// if NOT .Net Micro Framework
-#if (!MF_FRAMEWORK_VERSION_V4_2 && !MF_FRAMEWORK_VERSION_V4_3 && !MF_FRAMEWORK_VERSION_V4_4 && !NANOFRAMEWORK_1_0)
-using System.Collections.Generic;
-#endif
 using System.Collections;
 using System.Text;
-using uPLibrary.Networking.M2Mqtt.Exceptions;
+using nanoFramework.M2Mqtt.Exceptions;
 
-namespace uPLibrary.Networking.M2Mqtt.Messages
+namespace nanoFramework.M2Mqtt.Messages
 {
     /// <summary>
     /// Class for SUBSCRIBE message from client to broker
@@ -62,7 +58,7 @@ namespace uPLibrary.Networking.M2Mqtt.Messages
             QoSLevels = qosLevels;
 
             // SUBSCRIBE message uses QoS Level 1 (not "officially" in 3.1.1)
-            QosLevel = QOS_LEVEL_AT_LEAST_ONCE;
+            QosLevel = (byte)MqttQoSLevel.AtLeastOnce;
         }
 
         /// <summary>
@@ -160,15 +156,21 @@ namespace uPLibrary.Networking.M2Mqtt.Messages
 
             // topics list empty
             if ((Topics == null) || (Topics.Length == 0))
+            {
                 throw new MqttClientException(MqttClientErrorCode.TopicsEmpty);
+            }
 
             // qos levels list empty
             if ((QoSLevels == null) || (QoSLevels.Length == 0))
+            {
                 throw new MqttClientException(MqttClientErrorCode.QosLevelsEmpty);
+            }
 
             // topics and qos levels lists length don't match
             if (Topics.Length != QoSLevels.Length)
+            {
                 throw new MqttClientException(MqttClientErrorCode.TopicsQosLevelsNotMatch);
+            }
 
             // message identifier
             varHeaderSize += MESSAGE_ID_SIZE;
@@ -221,15 +223,17 @@ namespace uPLibrary.Networking.M2Mqtt.Messages
             }
 
             // encode remaining length
-            index = this.EncodeRemainingLength(remainingLength, buffer, index);
+            index = EncodeRemainingLength(remainingLength, buffer, index);
 
             // check message identifier assigned (SUBSCRIBE uses QoS Level 1, so message id is mandatory)
             if (MessageId == 0)
+            {
                 throw new MqttClientException(MqttClientErrorCode.WrongMessageId);
+            }
+
             buffer[index++] = (byte)((MessageId >> 8) & 0x00FF); // MSB
             buffer[index++] = (byte)(MessageId & 0x00FF); // LSB 
 
-            topicIdx = 0;
             for (topicIdx = 0; topicIdx < Topics.Length; topicIdx++)
             {
                 // topic name

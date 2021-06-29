@@ -7,9 +7,6 @@ namespace System
 {
     static class Environment
     {
-        public static int TickCount
-        {
-            get { return (int)DateTime.UtcNow.Ticks; }
-        }
+        public static int TickCount => (int)DateTime.UtcNow.Ticks;
     }
 }

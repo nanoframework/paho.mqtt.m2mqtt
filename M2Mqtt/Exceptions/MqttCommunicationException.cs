@@ -17,7 +17,7 @@ Contributors:
 
 using System;
 
-namespace uPLibrary.Networking.M2Mqtt.Exceptions
+namespace nanoFramework.M2Mqtt.Exceptions
 {
     /// <summary>
     /// Exception due to error communication with broker on socket

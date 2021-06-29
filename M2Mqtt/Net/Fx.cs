@@ -17,7 +17,7 @@ Contributors:
 
 using System.Threading;
 
-namespace uPLibrary.Networking.M2Mqtt
+namespace nanoFramework.M2Mqtt
 {
     /// <summary>
     /// Support methods for specific framework

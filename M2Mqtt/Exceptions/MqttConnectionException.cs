@@ -17,7 +17,7 @@ Contributors:
 
 using System;
 
-namespace uPLibrary.Networking.M2Mqtt.Exceptions
+namespace nanoFramework.M2Mqtt.Exceptions
 {
     /// <summary>
     /// Connection to the broker exception
@@ -27,8 +27,8 @@ namespace uPLibrary.Networking.M2Mqtt.Exceptions
         /// <summary>
         /// Connection to the broker exception
         /// </summary>
-        /// <param name="message">A friendly message of the exception that occured</param>
-        /// <param name="innerException">Detail on why the exception occured</param>
+        /// <param name="message">A friendly message of the exception that occurred</param>
+        /// <param name="innerException">Detail on why the exception occurred</param>
         public MqttConnectionException(string message, Exception innerException)
             : base(message, innerException)
         { }

@@ -18,7 +18,7 @@ Contributors:
 using System;
 using System.Collections;
 
-namespace uPLibrary.Networking.M2Mqtt.Utility
+namespace nanoFramework.M2Mqtt.Utility
 {
     /// <summary>
     /// Extension class for a Queue

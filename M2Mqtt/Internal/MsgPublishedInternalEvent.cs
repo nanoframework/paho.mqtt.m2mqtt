@@ -15,9 +15,9 @@ Contributors:
    .NET Foundation and Contributors - nanoFramework support
 */
 
-using uPLibrary.Networking.M2Mqtt.Messages;
+using nanoFramework.M2Mqtt.Messages;
 
-namespace uPLibrary.Networking.M2Mqtt.Internal
+namespace nanoFramework.M2Mqtt.Internal
 {
     /// <summary>
     /// Internal event for a published message

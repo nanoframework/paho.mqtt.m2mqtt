@@ -17,9 +17,9 @@ Contributors:
 
 using System;
 using System.Text;
-using uPLibrary.Networking.M2Mqtt.Exceptions;
+using nanoFramework.M2Mqtt.Exceptions;
 
-namespace uPLibrary.Networking.M2Mqtt.Messages
+namespace nanoFramework.M2Mqtt.Messages
 {
     /// <summary>
     /// Class for CONNECT message from client to broker
@@ -151,7 +151,7 @@ namespace uPLibrary.Networking.M2Mqtt.Messages
         /// </summary>
         /// <param name="clientId">Client identifier</param>
         public MqttMsgConnect(string clientId) :
-            this(clientId, null, null, false, QOS_LEVEL_AT_LEAST_ONCE, false, null, null, true, KEEP_ALIVE_PERIOD_DEFAULT, PROTOCOL_VERSION_V3_1_1)
+            this(clientId, null, null, false, MqttQoSLevel.AtLeastOnce, false, null, null, true, KEEP_ALIVE_PERIOD_DEFAULT, PROTOCOL_VERSION_V3_1_1)
         {
         }
 
@@ -173,7 +173,7 @@ namespace uPLibrary.Networking.M2Mqtt.Messages
             string username, 
             string password,
             bool willRetain,
-            byte willQosLevel,
+            MqttQoSLevel willQosLevel,
             bool willFlag,
             string willTopic,
             string willMessage,
@@ -188,7 +188,7 @@ namespace uPLibrary.Networking.M2Mqtt.Messages
             Username = username;
             Password = password;
             WillRetain = willRetain;
-            WillQosLevel = willQosLevel;
+            WillQosLevel = (byte)willQosLevel;
             WillFlag = willFlag;
             WillTopic = willTopic;
             WillMessage = willMessage;
@@ -362,8 +362,8 @@ namespace uPLibrary.Networking.M2Mqtt.Messages
                 throw new MqttClientException(MqttClientErrorCode.KeepAliveWrong);
 
             // check on will QoS Level
-            if ((WillQosLevel < MqttMsgBase.QOS_LEVEL_AT_MOST_ONCE) ||
-                (WillQosLevel > MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE))
+            if ((WillQosLevel < (byte)MqttQoSLevel.AtMostOnce) ||
+                (WillQosLevel > (byte)MqttQoSLevel.ExactlyOnce))
                 throw new MqttClientException(MqttClientErrorCode.WillWrong);
 
             // protocol name field size

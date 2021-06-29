@@ -17,7 +17,7 @@ Contributors:
 
 using System;
 
-namespace uPLibrary.Networking.M2Mqtt.Exceptions
+namespace nanoFramework.M2Mqtt.Exceptions
 {
     /// <summary>
     /// MQTT client exception
@@ -40,7 +40,7 @@ namespace uPLibrary.Networking.M2Mqtt.Exceptions
     }
 
     /// <summary>
-    /// MQTT client erroro code
+    /// MQTT client error code
     /// </summary>
     public enum MqttClientErrorCode
     {

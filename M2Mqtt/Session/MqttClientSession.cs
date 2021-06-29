@@ -15,7 +15,7 @@ Contributors:
    .NET Foundation and Contributors - nanoFramework support
 */
 
-namespace uPLibrary.Networking.M2Mqtt.Session
+namespace nanoFramework.M2Mqtt.Session
 {
     /// <summary>
     /// MQTT Client Session

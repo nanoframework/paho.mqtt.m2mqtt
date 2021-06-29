@@ -17,9 +17,9 @@ Contributors:
 
 using System;
 using System.Text;
-using uPLibrary.Networking.M2Mqtt.Exceptions;
+using nanoFramework.M2Mqtt.Exceptions;
 
-namespace uPLibrary.Networking.M2Mqtt.Messages
+namespace nanoFramework.M2Mqtt.Messages
 {
     /// <summary>
     /// Class for PUBLISH message from client to broker
@@ -50,7 +50,7 @@ namespace uPLibrary.Networking.M2Mqtt.Messages
         /// <param name="topic">Message topic</param>
         /// <param name="message">Message data</param>
         public MqttMsgPublish(string topic, byte[] message) :
-            this(topic, message, false, QOS_LEVEL_AT_MOST_ONCE, false)
+            this(topic, message, false, MqttQoSLevel.AtMostOnce, false)
         {
         }
 
@@ -65,7 +65,7 @@ namespace uPLibrary.Networking.M2Mqtt.Messages
         public MqttMsgPublish(string topic,
             byte[] message,
             bool dupFlag,
-            byte qosLevel,
+            MqttQoSLevel qosLevel,
             bool retain) : base()
         {
             Type = MQTT_MSG_PUBLISH_TYPE;
@@ -73,7 +73,7 @@ namespace uPLibrary.Networking.M2Mqtt.Messages
             Topic = topic;
             Message = message;
             DupFlag = dupFlag;
-            QosLevel = qosLevel;
+            QosLevel = (byte)qosLevel;
             Retain = retain;
             MessageId = 0;
         }
@@ -105,7 +105,7 @@ namespace uPLibrary.Networking.M2Mqtt.Messages
             }
 
             // check wrong QoS level (both bits can't be set 1)
-            if (QosLevel > QOS_LEVEL_EXACTLY_ONCE)
+            if (QosLevel > (byte)MqttQoSLevel.ExactlyOnce)
             {
                 throw new MqttClientException(MqttClientErrorCode.QosNotAllowed);
             }
@@ -116,8 +116,8 @@ namespace uPLibrary.Networking.M2Mqtt.Messages
             varHeaderSize += topicUtf8.Length + 2;
 
             // message id is valid only with QOS level 1 or QOS level 2
-            if ((QosLevel == QOS_LEVEL_AT_LEAST_ONCE) || 
-                (QosLevel == QOS_LEVEL_EXACTLY_ONCE))
+            if ((QosLevel == (byte)MqttQoSLevel.AtLeastOnce) || 
+                (QosLevel == (byte)MqttQoSLevel.ExactlyOnce))
             {
                 varHeaderSize += MESSAGE_ID_SIZE;
             }
@@ -163,8 +163,8 @@ namespace uPLibrary.Networking.M2Mqtt.Messages
             index += topicUtf8.Length;
 
             // message id is valid only with QOS level 1 or QOS level 2
-            if ((QosLevel == QOS_LEVEL_AT_LEAST_ONCE) ||
-                (QosLevel == QOS_LEVEL_EXACTLY_ONCE))
+            if ((QosLevel == (byte)MqttQoSLevel.AtLeastOnce) ||
+                (QosLevel == (byte)MqttQoSLevel.ExactlyOnce))
             {
                 // check message identifier assigned
                 if (MessageId == 0)
@@ -217,7 +217,7 @@ namespace uPLibrary.Networking.M2Mqtt.Messages
             // read QoS level from fixed header
             msg.QosLevel = (byte)((fixedHeaderFirstByte & QOS_LEVEL_MASK) >> QOS_LEVEL_OFFSET);
             // check wrong QoS level (both bits can't be set 1)
-            if (msg.QosLevel > QOS_LEVEL_EXACTLY_ONCE)
+            if (msg.QosLevel > (byte)MqttQoSLevel.ExactlyOnce)
             {
                 throw new MqttClientException(MqttClientErrorCode.QosNotAllowed);
             }
@@ -228,8 +228,8 @@ namespace uPLibrary.Networking.M2Mqtt.Messages
             msg.Retain = (((fixedHeaderFirstByte & RETAIN_FLAG_MASK) >> RETAIN_FLAG_OFFSET) == 0x01);
             
             // message id is valid only with QOS level 1 or QOS level 2
-            if ((msg.QosLevel == QOS_LEVEL_AT_LEAST_ONCE) ||
-                (msg.QosLevel == QOS_LEVEL_EXACTLY_ONCE))
+            if ((msg.QosLevel == (byte)MqttQoSLevel.AtLeastOnce) ||
+                (msg.QosLevel == (byte)MqttQoSLevel.ExactlyOnce))
             {
                 // message id
                 msg.MessageId = (ushort)((buffer[index++] << 8) & 0xFF00);

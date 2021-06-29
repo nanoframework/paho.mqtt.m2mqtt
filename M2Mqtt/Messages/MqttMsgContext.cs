@@ -18,7 +18,7 @@ Contributors:
 using System;
 using System.Text;
 
-namespace uPLibrary.Networking.M2Mqtt.Messages
+namespace nanoFramework.M2Mqtt.Messages
 {
     /// <summary>
     /// Context for MQTT message

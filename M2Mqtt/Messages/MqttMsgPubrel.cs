@@ -15,9 +15,9 @@ Contributors:
    .NET Foundation and Contributors - nanoFramework support
 */
 
-using uPLibrary.Networking.M2Mqtt.Exceptions;
+using nanoFramework.M2Mqtt.Exceptions;
 
-namespace uPLibrary.Networking.M2Mqtt.Messages
+namespace nanoFramework.M2Mqtt.Messages
 {
     /// <summary>
     /// Class for PUBREL message from client top broker
@@ -31,7 +31,7 @@ namespace uPLibrary.Networking.M2Mqtt.Messages
         {
             Type = MQTT_MSG_PUBREL_TYPE;
             // PUBREL message use QoS Level 1 (not "officially" in 3.1.1)
-            QosLevel = QOS_LEVEL_AT_LEAST_ONCE;
+            QosLevel = (byte)MqttQoSLevel.AtLeastOnce;
         }
 
         /// <summary>

@@ -15,10 +15,9 @@ Contributors:
    .NET Foundation and Contributors - nanoFramework support
 */
 
-using System;
-using uPLibrary.Networking.M2Mqtt.Exceptions;
+using nanoFramework.M2Mqtt.Exceptions;
 
-namespace uPLibrary.Networking.M2Mqtt.Messages
+namespace nanoFramework.M2Mqtt.Messages
 {
     /// <summary>
     /// Class for SUBACK message from broker to client
