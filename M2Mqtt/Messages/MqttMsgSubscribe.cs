@@ -35,7 +35,7 @@ namespace nanoFramework.M2Mqtt.Messages
         /// <summary>
         /// List of QOS Levels related to topics
         /// </summary>
-        public byte[] QoSLevels { get; set; }
+        public MqttQoSLevel[] QoSLevels { get; set; }
 
         /// <summary>
         /// Constructor
@@ -50,7 +50,7 @@ namespace nanoFramework.M2Mqtt.Messages
         /// </summary>
         /// <param name="topics">List of topics to subscribe</param>
         /// <param name="qosLevels">List of QOS Levels related to topics</param>
-        public MqttMsgSubscribe(string[] topics, byte[] qosLevels)
+        public MqttMsgSubscribe(string[] topics, MqttQoSLevel[] qosLevels)
         {
             Type = MQTT_MSG_SUBSCRIBE_TYPE;
 
@@ -130,11 +130,11 @@ namespace nanoFramework.M2Mqtt.Messages
 
             // copy from list to array
             msg.Topics = new string[tmpTopics.Count];
-            msg.QoSLevels = new byte[tmpQosLevels.Count];
+            msg.QoSLevels = new MqttQoSLevel[tmpQosLevels.Count];
             for (int i = 0; i < tmpTopics.Count; i++)
             {
                 msg.Topics[i] = (string)tmpTopics[i];
-                msg.QoSLevels[i] = (byte)tmpQosLevels[i];
+                msg.QoSLevels[i] = (MqttQoSLevel)tmpQosLevels[i];
             }
 
             return msg;
@@ -243,7 +243,7 @@ namespace nanoFramework.M2Mqtt.Messages
                 index += topicsUtf8[topicIdx].Length;
 
                 // requested QoS
-                buffer[index++] = QoSLevels[topicIdx];
+                buffer[index++] = (byte)QoSLevels[topicIdx];
             }
 
             return buffer;

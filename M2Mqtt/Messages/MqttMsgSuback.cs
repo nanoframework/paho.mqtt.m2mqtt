@@ -27,7 +27,7 @@ namespace nanoFramework.M2Mqtt.Messages
         /// <summary>
         /// List of granted QOS Levels
         /// </summary>
-        public byte[] GrantedQoSLevels { get; set; }
+        public MqttQoSLevel[] GrantedQoSLevels { get; set; }
 
         /// <summary>
         /// Constructor
@@ -71,11 +71,11 @@ namespace nanoFramework.M2Mqtt.Messages
             msg.MessageId |= (buffer[index++]);
 
             // payload contains QoS levels granted
-            msg.GrantedQoSLevels = new byte[remainingLength - MESSAGE_ID_SIZE];
+            msg.GrantedQoSLevels = new MqttQoSLevel[remainingLength - MESSAGE_ID_SIZE];
             int qosIdx = 0;
             do
             {
-                msg.GrantedQoSLevels[qosIdx++] = buffer[index++];
+                msg.GrantedQoSLevels[qosIdx++] = (MqttQoSLevel)buffer[index++];
             } while (index < remainingLength);
 
             return msg;
@@ -141,7 +141,7 @@ namespace nanoFramework.M2Mqtt.Messages
             // payload contains QoS levels granted
             for (grantedQosIdx = 0; grantedQosIdx < GrantedQoSLevels.Length; grantedQosIdx++)
             {
-                buffer[index++] = GrantedQoSLevels[grantedQosIdx];
+                buffer[index++] = (byte)GrantedQoSLevels[grantedQosIdx];
             }
 
             return buffer;

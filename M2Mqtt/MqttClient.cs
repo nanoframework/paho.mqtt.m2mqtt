@@ -160,7 +160,7 @@ namespace nanoFramework.M2Mqtt
         /// <summary>
         /// Will QOS level
         /// </summary>
-        public byte WillQosLevel { get; private set; }
+        public MqttQoSLevel WillQosLevel { get; private set; }
 
         /// <summary>
         /// Will topic
@@ -374,7 +374,7 @@ namespace nanoFramework.M2Mqtt
                 WillFlag = willFlag;
                 WillTopic = willTopic;
                 WillMessage = willMessage;
-                WillQosLevel = (byte)willQosLevel;
+                WillQosLevel = willQosLevel;
 
                 _keepAlivePeriod = keepAlivePeriod * 1000; // convert in ms
 
@@ -484,7 +484,7 @@ namespace nanoFramework.M2Mqtt
         /// <param name="topics">List of topics to subscribe</param>
         /// <param name="qosLevels">QOS levels related to topics</param>
         /// <returns>Message Id related to SUBSCRIBE message</returns>
-        public ushort Subscribe(string[] topics, byte[] qosLevels)
+        public ushort Subscribe(string[] topics, MqttQoSLevel[] qosLevels)
         {
             MqttMsgSubscribe subscribe =
                 new MqttMsgSubscribe(topics, qosLevels)

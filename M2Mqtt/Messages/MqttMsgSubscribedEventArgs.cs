@@ -32,14 +32,14 @@ namespace nanoFramework.M2Mqtt.Messages
         /// <summary>
         /// List of granted QOS Levels
         /// </summary>
-        public byte[] GrantedQoSLevels { get; internal set; }
+        public MqttQoSLevel[] GrantedQoSLevels { get; internal set; }
 
         /// <summary>
         /// Constructor
         /// </summary>
         /// <param name="messageId">Message identifier for subscribed topics</param>
         /// <param name="grantedQosLevels">List of granted QOS Levels</param>
-        public MqttMsgSubscribedEventArgs(ushort messageId, byte[] grantedQosLevels)
+        public MqttMsgSubscribedEventArgs(ushort messageId, MqttQoSLevel[] grantedQosLevels)
         {
             MessageId = messageId;
             GrantedQoSLevels = grantedQosLevels;

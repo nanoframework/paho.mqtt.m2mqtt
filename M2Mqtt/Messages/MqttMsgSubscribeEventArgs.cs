@@ -37,7 +37,7 @@ namespace nanoFramework.M2Mqtt.Messages
         /// <summary>
         /// List of QOS Levels requested
         /// </summary>
-        public byte[] QoSLevels { get; internal set; }
+        public MqttQoSLevel[] QoSLevels { get; internal set; }
 
         /// <summary>
         /// Constructor
@@ -45,7 +45,7 @@ namespace nanoFramework.M2Mqtt.Messages
         /// <param name="messageId">Message identifier for subscribe topics request</param>
         /// <param name="topics">Topics requested to subscribe</param>
         /// <param name="qosLevels">List of QOS Levels requested</param>
-        public MqttMsgSubscribeEventArgs(ushort messageId, string[] topics, byte[] qosLevels)
+        public MqttMsgSubscribeEventArgs(ushort messageId, string[] topics, MqttQoSLevel[] qosLevels)
         {
             MessageId = messageId;
             Topics = topics;
