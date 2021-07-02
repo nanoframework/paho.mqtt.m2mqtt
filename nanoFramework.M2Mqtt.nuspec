@@ -32,8 +32,8 @@
     <file src="bin\Release\nanoFramework.M2Mqtt.pdbx" target="lib\nanoFramework.M2Mqtt.pdbx" />
     <file src="bin\Release\nanoFramework.M2Mqtt.pe" target="lib\nanoFramework.M2Mqtt.pe" />
     <file src="bin\Release\nanoFramework.M2Mqtt.xml" target="lib\nanoFramework.M2Mqtt.xml" />
-    <file src="..\assets\readme.txt" target="" />
-    <file src="..\assets\nf-logo.png" target="images\" />
-    <file src="..\LICENSE.md" target="" />
+    <file src=".\assets\readme.txt" target="" />
+    <file src=".\assets\nf-logo.png" target="images\" />
+    <file src=".\LICENSE.md" target="" />
   </files>
 </package>
