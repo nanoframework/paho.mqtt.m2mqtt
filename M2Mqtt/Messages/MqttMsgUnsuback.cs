@@ -55,7 +55,7 @@ namespace nanoFramework.M2Mqtt.Messages
             }
 
             // get remaining length and allocate buffer
-            int remainingLength = DecodeRemainingLength(channel);
+            int remainingLength = DecodeVariableByte(channel);
             buffer = new byte[remainingLength];
 
             // read bytes from socket...
@@ -113,7 +113,7 @@ namespace nanoFramework.M2Mqtt.Messages
             }
 
             // encode remaining length
-            indexUnback = EncodeRemainingLength(remainingLength, buffer, indexUnback);
+            indexUnback = EncodeVariableByte(remainingLength, buffer, indexUnback);
 
             // message id
             buffer[indexUnback++] = (byte)((MessageId >> 8) & 0x00FF); // MSB

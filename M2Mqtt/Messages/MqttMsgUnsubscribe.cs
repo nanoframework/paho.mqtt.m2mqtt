@@ -79,7 +79,7 @@ namespace nanoFramework.M2Mqtt.Messages
             }
 
             // get remaining length and allocate buffer
-            int remainingLength = DecodeRemainingLength(channel);
+            int remainingLength = DecodeVariableByte(channel);
             buffer = new byte[remainingLength];
 
             // read bytes from socket...
@@ -195,7 +195,7 @@ namespace nanoFramework.M2Mqtt.Messages
             }
 
             // encode remaining length
-            indexUnsubsc = this.EncodeRemainingLength(remainingLength, buffer, indexUnsubsc);
+            indexUnsubsc = this.EncodeVariableByte(remainingLength, buffer, indexUnsubsc);
 
             // check message identifier assigned
             if (MessageId == 0)

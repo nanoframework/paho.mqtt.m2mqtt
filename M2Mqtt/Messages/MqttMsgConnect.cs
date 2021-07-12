@@ -173,16 +173,6 @@ namespace nanoFramework.M2Mqtt.Messages
         public ushort TopicAliasMaximum { get; set; }
 
         /// <summary>
-        /// Maximum PacketSize, v5.0 only
-        /// </summary>
-        public uint MaximumPacketSize { get; set; }
-
-        /// <summary>
-        /// User Property, v5.0 only
-        /// </summary>
-        public ArrayList UserProperties { get; set; } = new ArrayList();
-
-        /// <summary>
         /// Will Delay Interval, v5.0 only
         /// </summary>
         public uint WillDelayInterval { get; set; }
@@ -266,7 +256,7 @@ namespace nanoFramework.M2Mqtt.Messages
             MqttMsgConnect msg = new MqttMsgConnect();
 
             // get remaining length and allocate buffer
-            int remainingLength = DecodeRemainingLength(channel);
+            int remainingLength = DecodeVariableByte(channel);
             buffer = new byte[remainingLength];
 
             // read bytes from socket...
@@ -416,7 +406,7 @@ namespace nanoFramework.M2Mqtt.Messages
             int remainingLength = 0;
             byte[] buffer;
             int index = 0;
-            int variableHeaderSize = 0;
+            int varHeaderPropSize = 0;
 
             byte[] clientIdUtf8 = Encoding.UTF8.GetBytes(ClientId);
             byte[] willTopicUtf8 = (WillFlag && (WillTopic != null)) ? Encoding.UTF8.GetBytes(WillTopic) : null;
@@ -483,57 +473,57 @@ namespace nanoFramework.M2Mqtt.Messages
                 if (!string.IsNullOrEmpty(AuthenticationMethod))
                 {
                     authenticationMethod = Encoding.UTF8.GetBytes(AuthenticationMethod);
-                    variableHeaderSize += ENCODING_UTF8_SIZE + authenticationMethod.Length;
+                    varHeaderPropSize += ENCODING_UTF8_SIZE + authenticationMethod.Length;
                 }
 
                 if ((AuthenticationData != null) && (AuthenticationData.Length > 0))
                 {
                     authenticationData = EncodeDecodeHelper.EncodeArray(MqttProperty.AuthenticationData, AuthenticationData);
-                    variableHeaderSize += authenticationData.Length;
+                    varHeaderPropSize += authenticationData.Length;
                 }
 
                 if (SessionExpiryInterval > 0)
                 {
-                    variableHeaderSize += ENCODING_FOUR_BYTE_SIZE;
+                    varHeaderPropSize += ENCODING_FOUR_BYTE_SIZE;
                 }
 
                 if (ReceiveMaximum != ushort.MaxValue)
                 {
-                    variableHeaderSize += ENCODING_TWO_BYTE_SIZE;
+                    varHeaderPropSize += ENCODING_TWO_BYTE_SIZE;
                 }
 
                 if (MaximumPacketSize > 0)
                 {
-                    variableHeaderSize += ENCODING_FOUR_BYTE_SIZE;
+                    varHeaderPropSize += ENCODING_FOUR_BYTE_SIZE;
                 }
 
                 if (TopicAliasMaximum > 0)
                 {
-                    variableHeaderSize += ENCODING_TWO_BYTE_SIZE;
+                    varHeaderPropSize += ENCODING_TWO_BYTE_SIZE;
                 }
 
                 if (UserProperties.Count > 0)
                 {
                     userProperties = EncodeDecodeHelper.EncodeUserProperties(UserProperties);
-                    variableHeaderSize += userProperties.Length;
+                    varHeaderPropSize += userProperties.Length;
                 }
 
                 if (RequestProblemInformation)
                 {
-                    variableHeaderSize += ENCODING_BYTE_SIZE;
+                    varHeaderPropSize += ENCODING_BYTE_SIZE;
                 }
 
                 if (RequestResponseInformation)
                 {
-                    variableHeaderSize += ENCODING_BYTE_SIZE;
+                    varHeaderPropSize += ENCODING_BYTE_SIZE;
                 }
 
                 if (WillDelayInterval > 0)
                 {
-                    variableHeaderSize += ENCODING_FOUR_BYTE_SIZE;
+                    varHeaderPropSize += ENCODING_FOUR_BYTE_SIZE;
                 }
 
-                varHeaderSize += variableHeaderSize + EncodeDecodeHelper.EncodeLength(variableHeaderSize);
+                varHeaderSize += varHeaderPropSize + EncodeDecodeHelper.EncodeLength(varHeaderPropSize);
             }
 
             // client identifier field size
@@ -568,7 +558,7 @@ namespace nanoFramework.M2Mqtt.Messages
             buffer[index++] = ((byte)MqttMessageType.Connect << MSG_TYPE_OFFSET) | MQTT_MSG_CONNECT_FLAG_BITS; // [v.3.1.1]
 
             // encode remaining length
-            index = EncodeRemainingLength(remainingLength, buffer, index);
+            index = EncodeVariableByte(remainingLength, buffer, index);
 
             // protocol name
             buffer[index++] = 0; // MSB protocol name size
@@ -614,7 +604,7 @@ namespace nanoFramework.M2Mqtt.Messages
             {
                 // The header size
 
-                index = EncodeRemainingLength(variableHeaderSize, buffer, index);
+                index = EncodeVariableByte(varHeaderPropSize, buffer, index);
 
                 if (authenticationMethod != null)
                 {

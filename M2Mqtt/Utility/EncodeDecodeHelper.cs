@@ -127,5 +127,20 @@ namespace nanoFramework.M2Mqtt.Utility
                 return 4;
             }
         }
+
+        public static int DecodeVariableByte(byte[] buffer, ref int index)
+        {
+            int multiplier = 1;
+            int value = 0;
+            int digit;
+            do
+            {
+                // next digit from stream
+                digit = buffer[index++];
+                value += ((digit & 127) * multiplier);
+                multiplier *= 128;
+            } while ((digit & 128) != 0);
+            return value;
+        }
     }
 }

@@ -16,6 +16,7 @@ Contributors:
 */
 
 using System;
+using System.Collections;
 using System.Text;
 
 namespace nanoFramework.M2Mqtt.Messages
@@ -100,6 +101,17 @@ namespace nanoFramework.M2Mqtt.Messages
         public ushort MessageId { get; set; }
 
         /// <summary>
+        /// User Property, v5.0 only
+        /// </summary>
+        public ArrayList UserProperties { get; set; } = new ArrayList();
+
+
+        /// <summary>
+        /// Maximum Packet Size, v5.0 only
+        /// </summary>
+        public uint MaximumPacketSize { get; set; }
+
+        /// <summary>
         /// Returns message bytes rapresentation
         /// </summary>
         /// <param name="protocolVersion">Protocol version</param>
@@ -113,7 +125,7 @@ namespace nanoFramework.M2Mqtt.Messages
         /// <param name="buffer">Message buffer for inserting encoded value</param>
         /// <param name="index">Index from which insert encoded value into buffer</param>
         /// <returns>Index updated</returns>
-        protected int EncodeRemainingLength(int remainingLength, byte[] buffer, int index)
+        protected int EncodeVariableByte(int remainingLength, byte[] buffer, int index)
         {
             int digit = 0;
             do
@@ -132,7 +144,7 @@ namespace nanoFramework.M2Mqtt.Messages
         /// </summary>
         /// <param name="channel">Channel from reading bytes</param>
         /// <returns>Decoded remaining length</returns>
-        protected static int DecodeRemainingLength(IMqttNetworkChannel channel)
+        protected static int DecodeVariableByte(IMqttNetworkChannel channel)
         {
             int multiplier = 1;
             int value = 0;

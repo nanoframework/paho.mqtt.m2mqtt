@@ -32,7 +32,13 @@
     <Compile Include="Helpers.cs" />
     <Compile Include="MokChannel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="PubackTests.cs" />
+    <Compile Include="PubcompTests.cs" />
     <Compile Include="PublishTests.cs" />
+    <Compile Include="PubrecTests.cs" />
+    <Compile Include="PubrelTests.cs" />
+    <Compile Include="SubackTests.cs" />
+    <Compile Include="SubscribeTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="mscorlib, Version=1.10.5.0, Culture=neutral, PublicKeyToken=c07d481e9758c731">

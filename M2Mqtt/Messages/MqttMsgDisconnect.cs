@@ -53,7 +53,7 @@ namespace nanoFramework.M2Mqtt.Messages
             }
 
             // get remaining length and allocate buffer
-            int remainingLength = DecodeRemainingLength(channel);
+            int remainingLength = DecodeVariableByte(channel);
             // NOTE : remainingLength must be 0
             if(remainingLength !=0)
             {

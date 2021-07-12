@@ -16,6 +16,10 @@ Contributors:
 */
 
 using nanoFramework.M2Mqtt.Exceptions;
+using nanoFramework.M2Mqtt.Utility;
+using System;
+using System.Diagnostics;
+using System.Text;
 
 namespace nanoFramework.M2Mqtt.Messages
 {
@@ -28,6 +32,17 @@ namespace nanoFramework.M2Mqtt.Messages
         /// List of granted QOS Levels
         /// </summary>
         public MqttQoSLevel[] GrantedQoSLevels { get; set; }
+
+        /// <summary>
+        /// List of granted Reasons, v5.0 only
+        /// </summary>
+        /// <remarks>In v5.0, replaces the GrantedQoSLevels, still the cast will be done in the GrantedQoSLevels.</remarks>
+        public MqttReasonCode[] ReasonCodes { get; set; }
+
+        /// <summary>
+        /// The REason as a string, v5.0 only
+        /// </summary>
+        public string Reason { get; set; }
 
         /// <summary>
         /// Constructor
@@ -50,7 +65,7 @@ namespace nanoFramework.M2Mqtt.Messages
             int index = 0;
             MqttMsgSuback msg = new MqttMsgSuback();
 
-            if (protocolVersion == MqttProtocolVersion.Version_3_1_1)
+            if ((protocolVersion == MqttProtocolVersion.Version_3_1_1) || (protocolVersion == MqttProtocolVersion.Version_5))
             {
                 // [v3.1.1] check flag bits
                 if ((fixedHeaderFirstByte & MSG_FLAG_BITS_MASK) != MQTT_MSG_SUBACK_FLAG_BITS)
@@ -60,7 +75,7 @@ namespace nanoFramework.M2Mqtt.Messages
             }
 
             // get remaining length and allocate buffer
-            int remainingLength = MqttMsgBase.DecodeRemainingLength(channel);
+            int remainingLength = DecodeVariableByte(channel);
             buffer = new byte[remainingLength];
 
             // read bytes from socket...
@@ -70,11 +85,49 @@ namespace nanoFramework.M2Mqtt.Messages
             msg.MessageId = (ushort)((buffer[index++] << 8) & 0xFF00);
             msg.MessageId |= (buffer[index++]);
 
+            if (protocolVersion == MqttProtocolVersion.Version_5)
+            {
+                // size of the properties
+                int propSize = EncodeDecodeHelper.GetPropertySize(buffer, ref index);
+                propSize += index;
+                MqttProperty prop;
+
+                while (propSize > index)
+                {
+                    prop = (MqttProperty)buffer[index++];
+                    switch (prop)
+                    {
+                        case MqttProperty.ReasonString:
+                            // UTF8 encoded
+                            msg.Reason = EncodeDecodeHelper.GetUTF8FromBuffer(buffer, ref index);
+                            break;
+                        case MqttProperty.UserProperty:
+                            // UTF8 and can have multiple ones
+                            msg.UserProperties.Add(EncodeDecodeHelper.GetUTF8FromBuffer(buffer, ref index));
+                            break;
+                        default:
+                            // non supported property
+                            index = propSize;
+                            break;
+                    }
+                }
+            }
+
             // payload contains QoS levels granted
-            msg.GrantedQoSLevels = new MqttQoSLevel[remainingLength - MESSAGE_ID_SIZE];
+            msg.GrantedQoSLevels = new MqttQoSLevel[remainingLength - index];
+            if (protocolVersion == MqttProtocolVersion.Version_5)
+            {
+                msg.ReasonCodes = new MqttReasonCode[remainingLength - index];
+            }
+
             int qosIdx = 0;
             do
             {
+                if (protocolVersion == MqttProtocolVersion.Version_5)
+                {
+                    msg.ReasonCodes[qosIdx] = (MqttReasonCode)buffer[index];
+                }
+
                 msg.GrantedQoSLevels[qosIdx++] = (MqttQoSLevel)buffer[index++];
             } while (index < remainingLength);
 
@@ -94,16 +147,61 @@ namespace nanoFramework.M2Mqtt.Messages
             int remainingLength = 0;
             byte[] buffer;
             int index = 0;
+            int varHeaderPropSize = 0;
+            byte[] reason = null;
+            byte[] userProperties = null;
 
             // message identifier
             varHeaderSize += MESSAGE_ID_SIZE;
 
-            int grantedQosIdx = 0;
-            for (grantedQosIdx = 0; grantedQosIdx < GrantedQoSLevels.Length; grantedQosIdx++)
+            if (protocolVersion == MqttProtocolVersion.Version_5)
             {
-                payloadSize++;
+                if (!string.IsNullOrEmpty(Reason))
+                {
+                    reason = Encoding.UTF8.GetBytes(Reason);
+                    // Check if we are over the Maximum size
+                    if ((MaximumPacketSize > 0) && (reason.Length + varHeaderSize > MaximumPacketSize))
+                    {
+                        reason = null;
+                    }
+                    else
+                    {
+                        varHeaderPropSize += ENCODING_UTF8_SIZE + reason.Length;
+                    }
+                }
+
+                if (UserProperties.Count > 0)
+                {
+                    userProperties = EncodeDecodeHelper.EncodeUserProperties(UserProperties);
+                    // Check if we are over the Maximum size
+                    if ((MaximumPacketSize > 0) && (userProperties.Length + varHeaderSize > MaximumPacketSize))
+                    {
+                        userProperties = null;
+                    }
+                    else
+                    {
+                        varHeaderPropSize += userProperties.Length;
+                    }
+                }
+
+                varHeaderSize += varHeaderPropSize + EncodeDecodeHelper.EncodeLength(varHeaderPropSize);
             }
 
+            int grantedQosIdx;
+            if ((protocolVersion == MqttProtocolVersion.Version_5) && (ReasonCodes != null))
+            {
+                for (grantedQosIdx = 0; grantedQosIdx < ReasonCodes.Length; grantedQosIdx++)
+                {
+                    payloadSize++;
+                }
+            }
+            else
+            {
+                for (grantedQosIdx = 0; grantedQosIdx < GrantedQoSLevels.Length; grantedQosIdx++)
+                {
+                    payloadSize++;
+                }
+            }
             remainingLength += (varHeaderSize + payloadSize);
 
             // first byte of fixed header
@@ -132,16 +230,45 @@ namespace nanoFramework.M2Mqtt.Messages
             }
 
             // encode remaining length
-            index = this.EncodeRemainingLength(remainingLength, buffer, index);
+            index = EncodeVariableByte(remainingLength, buffer, index);
 
             // message id
             buffer[index++] = (byte)((MessageId >> 8) & 0x00FF); // MSB
             buffer[index++] = (byte)(MessageId & 0x00FF); // LSB
 
-            // payload contains QoS levels granted
-            for (grantedQosIdx = 0; grantedQosIdx < GrantedQoSLevels.Length; grantedQosIdx++)
+            // v5 specific
+            if (protocolVersion == MqttProtocolVersion.Version_5)
             {
-                buffer[index++] = (byte)GrantedQoSLevels[grantedQosIdx];
+                // Encode length and the properties
+                index = EncodeVariableByte(varHeaderPropSize, buffer, index);
+
+                if (reason != null)
+                {
+                    EncodeDecodeHelper.EncodeUTF8FromBuffer(MqttProperty.ReasonString, reason, buffer, ref index);
+                }
+
+                if (userProperties != null)
+                {
+                    Array.Copy(userProperties, 0, buffer, index, userProperties.Length);
+                    index += userProperties.Length;
+                }
+            }
+
+            // payload contains QoS levels granted
+
+            if ((protocolVersion == MqttProtocolVersion.Version_5) && (ReasonCodes != null))
+            {
+                for (grantedQosIdx = 0; grantedQosIdx < ReasonCodes.Length; grantedQosIdx++)
+                {
+                    buffer[index++] = (byte)ReasonCodes[grantedQosIdx];
+                }
+            }
+            else
+            {
+                for (grantedQosIdx = 0; grantedQosIdx < GrantedQoSLevels.Length; grantedQosIdx++)
+                {
+                    buffer[index++] = (byte)GrantedQoSLevels[grantedQosIdx];
+                }
             }
 
             return buffer;

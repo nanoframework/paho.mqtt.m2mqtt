@@ -69,12 +69,12 @@ namespace nanoFramework.M2Mqtt.Messages
         public ushort ReceiveMaximum { get; set; } = ushort.MaxValue;
 
         /// <summary>
-        /// , v5.0 only
+        /// True if there is a maximum QoS, v5.0 only
         /// </summary>
         public bool MaximumQoS { get; set; }
 
         /// <summary>
-        /// , v5.0 only
+        /// True if retain is available, v5.0 only
         /// </summary>
         public bool RetainAvailable { get; set; }
 
@@ -84,7 +84,7 @@ namespace nanoFramework.M2Mqtt.Messages
         public uint MaximumPacketSize { get; set; }
 
         /// <summary>
-        /// , v5.0 only
+        /// The client ID to use to connect to the server. This must replace the initial Client ID used for the connection, v5.0 only
         /// </summary>
         public string AssignedClientIdentifier { get; set; }
 
@@ -94,14 +94,9 @@ namespace nanoFramework.M2Mqtt.Messages
         public ushort TopicAliasMaximum { get; set; }
 
         /// <summary>
-        /// , v5.0 only
+        /// The REason as a string, v5.0 only
         /// </summary>
         public string Reason { get; set; }
-
-        /// <summary>
-        /// User Property, v5.0 only
-        /// </summary>
-        public ArrayList UserProperties { get; set; } = new ArrayList();
 
         /// <summary>
         /// True if Wildcard Subscription are Available on the server, v5.0 only
@@ -124,12 +119,12 @@ namespace nanoFramework.M2Mqtt.Messages
         public ushort ServerKeepAlive { get; set; }
 
         /// <summary>
-        /// , v5.0 only
+        /// Used as the basis for creating a Response Topic, v5.0 only
         /// </summary>
         public string ResponseInformation { get; set; }
 
         /// <summary>
-        /// , v5.0 only
+        /// Used by the Client to identify another Server to use, v5.0 only
         /// </summary>
         public string ServerReference { get; set; }
 
@@ -174,7 +169,7 @@ namespace nanoFramework.M2Mqtt.Messages
             }
 
             // get remaining length and allocate buffer
-            int remainingLength = DecodeRemainingLength(channel);
+            int remainingLength = DecodeVariableByte(channel);
             buffer = new byte[remainingLength];
 
             // read bytes from socket...
@@ -290,7 +285,7 @@ namespace nanoFramework.M2Mqtt.Messages
         {
             int fixedHeaderSize = 0;
             int varHeaderSize = 0;
-            int variableHeaderSize = 0;
+            int varHeaderPropSize = 0;
             int remainingLength = 0;
             byte[] buffer;
             int index = 0;
@@ -306,97 +301,97 @@ namespace nanoFramework.M2Mqtt.Messages
             {
                 if (SessionExpiryInterval > 0)
                 {
-                    variableHeaderSize += ENCODING_FOUR_BYTE_SIZE;
+                    varHeaderPropSize += ENCODING_FOUR_BYTE_SIZE;
                 }
 
                 if (ReceiveMaximum != ushort.MaxValue)
                 {
-                    variableHeaderSize += ENCODING_TWO_BYTE_SIZE;
+                    varHeaderPropSize += ENCODING_TWO_BYTE_SIZE;
                 }
 
                 if (MaximumQoS)
                 {
-                    variableHeaderSize += ENCODING_BYTE_SIZE;
+                    varHeaderPropSize += ENCODING_BYTE_SIZE;
                 }
 
                 if (RetainAvailable)
                 {
-                    variableHeaderSize += ENCODING_BYTE_SIZE;
+                    varHeaderPropSize += ENCODING_BYTE_SIZE;
                 }
 
                 if (MaximumPacketSize > 0)
                 {
-                    variableHeaderSize += ENCODING_FOUR_BYTE_SIZE;
+                    varHeaderPropSize += ENCODING_FOUR_BYTE_SIZE;
                 }
 
                 if (!string.IsNullOrEmpty(AssignedClientIdentifier))
                 {
                     assignedClientIdentifier = Encoding.UTF8.GetBytes(AssignedClientIdentifier);
-                    variableHeaderSize += ENCODING_UTF8_SIZE + assignedClientIdentifier.Length;
+                    varHeaderPropSize += ENCODING_UTF8_SIZE + assignedClientIdentifier.Length;
                 }
 
                 if (TopicAliasMaximum > 0)
                 {
-                    variableHeaderSize += ENCODING_TWO_BYTE_SIZE;
+                    varHeaderPropSize += ENCODING_TWO_BYTE_SIZE;
                 }
 
                 if (!string.IsNullOrEmpty(Reason))
                 {
                     reason = Encoding.UTF8.GetBytes(Reason);
-                    variableHeaderSize += ENCODING_UTF8_SIZE + reason.Length;
+                    varHeaderPropSize += ENCODING_UTF8_SIZE + reason.Length;
                 }
 
                 if (UserProperties.Count > 0)
                 {
                     userProperties = EncodeDecodeHelper.EncodeUserProperties(UserProperties);
-                    variableHeaderSize += userProperties.Length;
+                    varHeaderPropSize += userProperties.Length;
                 }
 
                 if (WildcardSubscriptionAvailable)
                 {
-                    variableHeaderSize += ENCODING_BYTE_SIZE;
+                    varHeaderPropSize += ENCODING_BYTE_SIZE;
                 }
 
                 if (SubscriptionIdentifiersAvailable)
                 {
-                    variableHeaderSize += ENCODING_BYTE_SIZE;
+                    varHeaderPropSize += ENCODING_BYTE_SIZE;
                 }
 
                 if (SharedSubscriptionAvailable)
                 {
-                    variableHeaderSize += ENCODING_BYTE_SIZE;
+                    varHeaderPropSize += ENCODING_BYTE_SIZE;
                 }
 
                 if (ServerKeepAlive > 0)
                 {
-                    variableHeaderSize += ENCODING_TWO_BYTE_SIZE;
+                    varHeaderPropSize += ENCODING_TWO_BYTE_SIZE;
                 }
 
                 if (!string.IsNullOrEmpty(ResponseInformation))
                 {
                     responseInformation = Encoding.UTF8.GetBytes(ResponseInformation);
-                    variableHeaderSize += ENCODING_UTF8_SIZE + responseInformation.Length;
+                    varHeaderPropSize += ENCODING_UTF8_SIZE + responseInformation.Length;
                 }
 
                 if (!string.IsNullOrEmpty(ServerReference))
                 {
                     serverReference = Encoding.UTF8.GetBytes(ServerReference);
-                    variableHeaderSize += ENCODING_UTF8_SIZE + serverReference.Length;
+                    varHeaderPropSize += ENCODING_UTF8_SIZE + serverReference.Length;
                 }
 
                 if (!string.IsNullOrEmpty(AuthenticationMethod))
                 {
                     authenticationMethod = Encoding.UTF8.GetBytes(AuthenticationMethod);
-                    variableHeaderSize += ENCODING_UTF8_SIZE + authenticationMethod.Length;
+                    varHeaderPropSize += ENCODING_UTF8_SIZE + authenticationMethod.Length;
                 }
 
                 if ((AuthenticationData != null) && (AuthenticationData.Length > 0))
                 {
                     authenticationData = EncodeDecodeHelper.EncodeArray(MqttProperty.AuthenticationData, AuthenticationData);
-                    variableHeaderSize += authenticationData.Length;
+                    varHeaderPropSize += authenticationData.Length;
                 }
 
-                varHeaderSize += variableHeaderSize + EncodeDecodeHelper.EncodeLength(variableHeaderSize);
+                varHeaderSize += varHeaderPropSize + EncodeDecodeHelper.EncodeLength(varHeaderPropSize);
             }
 
             if ((protocolVersion == MqttProtocolVersion.Version_3_1_1) || (protocolVersion == MqttProtocolVersion.Version_5))
@@ -438,7 +433,7 @@ namespace nanoFramework.M2Mqtt.Messages
             }
 
             // encode remaining length
-            index = EncodeRemainingLength(remainingLength, buffer, index);
+            index = EncodeVariableByte(remainingLength, buffer, index);
 
             if ((protocolVersion == MqttProtocolVersion.Version_3_1_1) || (protocolVersion == MqttProtocolVersion.Version_5))
             {
@@ -458,7 +453,7 @@ namespace nanoFramework.M2Mqtt.Messages
             {
                 // The header size
 
-                index = EncodeRemainingLength(variableHeaderSize, buffer, index);
+                index = EncodeVariableByte(varHeaderPropSize, buffer, index);
 
                 if (SessionExpiryInterval > 0)
                 {

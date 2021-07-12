@@ -16,6 +16,9 @@ Contributors:
 */
 
 using nanoFramework.M2Mqtt.Exceptions;
+using nanoFramework.M2Mqtt.Utility;
+using System;
+using System.Text;
 
 namespace nanoFramework.M2Mqtt.Messages
 {
@@ -24,6 +27,16 @@ namespace nanoFramework.M2Mqtt.Messages
     /// </summary>
     public class MqttMsgPuback : MqttMsgBase
     {
+        /// <summary>
+        /// Return Code, v5.0 only
+        /// </summary>
+        public MqttReasonCode ReasonCode { get; set; }
+
+        /// <summary>
+        /// The REason as a string, v5.0 only
+        /// </summary>
+        public string Reason { get; set; }
+
         /// <summary>
         /// Constructor
         /// </summary>
@@ -41,15 +54,53 @@ namespace nanoFramework.M2Mqtt.Messages
         {
             int fixedHeaderSize;
             int varHeaderSize = 0;
-            int payloadSize = 0;
             int remainingLength = 0;
             byte[] buffer;
             int indexPuback = 0;
+            int varHeaderPropSize = 0;
+            byte[] reason = null;
+            byte[] userProperties = null;
 
             // message identifier
             varHeaderSize += MESSAGE_ID_SIZE;
 
-            remainingLength += (varHeaderSize + payloadSize);
+            if (protocolVersion == MqttProtocolVersion.Version_5)
+            {
+                // Puback code
+                varHeaderSize += 1;
+
+                if (!string.IsNullOrEmpty(Reason))
+                {
+                    reason = Encoding.UTF8.GetBytes(Reason);
+                    // Check if we are over the Maximum size
+                    if ((MaximumPacketSize > 0) && (reason.Length + varHeaderSize > MaximumPacketSize))
+                    {
+                        reason = null;
+                    }
+                    else
+                    {
+                        varHeaderPropSize += ENCODING_UTF8_SIZE + reason.Length;
+                    }
+                }
+
+                if (UserProperties.Count > 0)
+                {
+                    userProperties = EncodeDecodeHelper.EncodeUserProperties(UserProperties);
+                    // Check if we are over the Maximum size
+                    if ((MaximumPacketSize > 0) && (userProperties.Length + varHeaderSize > MaximumPacketSize))
+                    {
+                        userProperties = null;
+                    }
+                    else
+                    {
+                        varHeaderPropSize += userProperties.Length;
+                    }
+                }
+
+                varHeaderSize += varHeaderPropSize + EncodeDecodeHelper.EncodeLength(varHeaderPropSize);
+            }
+
+            remainingLength += varHeaderSize;
 
             // first byte of fixed header
             fixedHeaderSize = 1;
@@ -64,10 +115,10 @@ namespace nanoFramework.M2Mqtt.Messages
             } while (temp > 0);
 
             // allocate buffer for message
-            buffer = new byte[fixedHeaderSize + varHeaderSize + payloadSize];
+            buffer = new byte[fixedHeaderSize + varHeaderSize];
 
             // first fixed header byte
-            if (protocolVersion == MqttProtocolVersion.Version_3_1_1)
+            if ((protocolVersion == MqttProtocolVersion.Version_3_1_1) ||(protocolVersion == MqttProtocolVersion.Version_5))
             {
                 buffer[indexPuback++] = ((byte)MqttMessageType.PublishAck << MSG_TYPE_OFFSET) | MQTT_MSG_PUBACK_FLAG_BITS; // [v.3.1.1]
             }
@@ -75,13 +126,34 @@ namespace nanoFramework.M2Mqtt.Messages
             {
                 buffer[indexPuback++] = (byte)MqttMessageType.PublishAck << MSG_TYPE_OFFSET;
             }
-                              
+
             // encode remaining length
-            indexPuback = EncodeRemainingLength(remainingLength, buffer, indexPuback);
+            indexPuback = EncodeVariableByte(remainingLength, buffer, indexPuback);
 
             // get message identifier
             buffer[indexPuback++] = (byte)((MessageId >> 8) & 0x00FF); // MSB
-            buffer[indexPuback] = (byte)(MessageId & 0x00FF); // LSB 
+            buffer[indexPuback++] = (byte)(MessageId & 0x00FF); // LSB 
+
+            // v5 specific
+            if (protocolVersion == MqttProtocolVersion.Version_5)
+            {
+                // ReasonCode
+                buffer[indexPuback++] = (byte)ReasonCode;
+
+                // Encode length and the properties
+                indexPuback = EncodeVariableByte(varHeaderPropSize, buffer, indexPuback);
+
+                if (reason != null)
+                {
+                    EncodeDecodeHelper.EncodeUTF8FromBuffer(MqttProperty.ReasonString, reason, buffer, ref indexPuback);
+                }
+
+                if (userProperties != null)
+                {
+                    Array.Copy(userProperties, 0, buffer, indexPuback, userProperties.Length);
+                    indexPuback += userProperties.Length;
+                }
+            }
 
             return buffer;
         }
@@ -99,7 +171,7 @@ namespace nanoFramework.M2Mqtt.Messages
             int index = 0;
             MqttMsgPuback msg = new MqttMsgPuback();
 
-            if (protocolVersion == MqttProtocolVersion.Version_3_1_1)
+            if ((protocolVersion == MqttProtocolVersion.Version_3_1_1) || (protocolVersion == MqttProtocolVersion.Version_5))
             {
                 // [v3.1.1] check flag bits
                 if ((fixedHeaderFirstByte & MSG_FLAG_BITS_MASK) != MQTT_MSG_PUBACK_FLAG_BITS)
@@ -109,7 +181,7 @@ namespace nanoFramework.M2Mqtt.Messages
             }
 
             // get remaining length and allocate buffer
-            int remainingLength = DecodeRemainingLength(channel);
+            int remainingLength = DecodeVariableByte(channel);
             buffer = new byte[remainingLength];
 
             // read bytes from socket...
@@ -117,7 +189,36 @@ namespace nanoFramework.M2Mqtt.Messages
 
             // message id
             msg.MessageId = (ushort)((buffer[index++] << 8) & 0xFF00);
-            msg.MessageId |= (buffer[index]);
+            msg.MessageId |= (buffer[index++]);
+
+            if (protocolVersion == MqttProtocolVersion.Version_5)
+            {
+                msg.ReasonCode = (MqttReasonCode)buffer[index++];
+                // size of the properties
+                int propSize = EncodeDecodeHelper.GetPropertySize(buffer, ref index);
+                propSize += index;
+                MqttProperty prop;
+
+                while (propSize > index)
+                {
+                    prop = (MqttProperty)buffer[index++];
+                    switch (prop)
+                    {
+                        case MqttProperty.ReasonString:
+                            // UTF8 encoded
+                            msg.Reason = EncodeDecodeHelper.GetUTF8FromBuffer(buffer, ref index);
+                            break;
+                        case MqttProperty.UserProperty:
+                            // UTF8 and can have multiple ones
+                            msg.UserProperties.Add(EncodeDecodeHelper.GetUTF8FromBuffer(buffer, ref index));
+                            break;
+                        default:
+                            // non supported property
+                            index = propSize;
+                            break;
+                    }
+                }
+            }
 
             return msg;
         }
