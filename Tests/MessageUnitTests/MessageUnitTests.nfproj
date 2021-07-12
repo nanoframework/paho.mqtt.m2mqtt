@@ -29,6 +29,7 @@
   <ItemGroup>
     <Compile Include="ConnackTests.cs" />
     <Compile Include="ConnectTests.cs" />
+    <Compile Include="DisconnectTests.cs" />
     <Compile Include="Helpers.cs" />
     <Compile Include="MokChannel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -39,6 +40,8 @@
     <Compile Include="PubrelTests.cs" />
     <Compile Include="SubackTests.cs" />
     <Compile Include="SubscribeTests.cs" />
+    <Compile Include="UnsubackTests.cs" />
+    <Compile Include="UnsubscribeTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="mscorlib, Version=1.10.5.0, Culture=neutral, PublicKeyToken=c07d481e9758c731">

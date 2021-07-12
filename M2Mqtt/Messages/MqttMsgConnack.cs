@@ -497,7 +497,7 @@ namespace nanoFramework.M2Mqtt.Messages
                     EncodeDecodeHelper.EncodeUTF8FromBuffer(MqttProperty.ReasonString, reason, buffer, ref index);
                 }
 
-                if (UserProperties.Count > 0)
+                if (userProperties != null)
                 {
                     Array.Copy(userProperties, 0, buffer, index, userProperties.Length);
                     index += userProperties.Length;

@@ -19,6 +19,7 @@ using System;
 using System.Collections;
 using System.Text;
 using nanoFramework.M2Mqtt.Exceptions;
+using nanoFramework.M2Mqtt.Utility;
 
 namespace nanoFramework.M2Mqtt.Messages
 {
@@ -83,7 +84,7 @@ namespace nanoFramework.M2Mqtt.Messages
             buffer = new byte[remainingLength];
 
             // read bytes from socket...
-            int received = channel.Receive(buffer);
+            channel.Receive(buffer);
 
             if (protocolVersion == MqttProtocolVersion.Version_3_1)
             {
@@ -100,6 +101,30 @@ namespace nanoFramework.M2Mqtt.Messages
             msg.MessageId = (ushort)((buffer[indexUnsub++] << 8) & 0xFF00);
             msg.MessageId |= buffer[indexUnsub++];
 
+            if (protocolVersion == MqttProtocolVersion.Version_5)
+            {
+                // size of the properties
+                int propSize = EncodeDecodeHelper.GetPropertySize(buffer, ref indexUnsub);
+                propSize += indexUnsub;
+                MqttProperty prop;
+
+                while (propSize > indexUnsub)
+                {
+                    prop = (MqttProperty)buffer[indexUnsub++];
+                    switch (prop)
+                    {
+                        case MqttProperty.UserProperty:
+                            // UTF8 and can have multiple ones
+                            msg.UserProperties.Add(EncodeDecodeHelper.GetUTF8FromBuffer(buffer, ref indexUnsub));
+                            break;
+                        default:
+                            // non supported property
+                            indexUnsub = propSize;
+                            break;
+                    }
+                }
+            }
+
             // payload contains topics
             // NOTE : before, I don't know how many topics will be in the payload (so use List)
 
@@ -112,7 +137,7 @@ namespace nanoFramework.M2Mqtt.Messages
                 topicUtf8 = new byte[topicUtf8Length];
                 Array.Copy(buffer, indexUnsub, topicUtf8, 0, topicUtf8Length);
                 indexUnsub += topicUtf8Length;
-                tmpTopics.Add(new String(Encoding.UTF8.GetChars(topicUtf8)));
+                tmpTopics.Add(Encoding.UTF8.GetString(topicUtf8, 0, topicUtf8.Length));
             } while (indexUnsub < remainingLength);
 
             // copy from list to array
@@ -138,6 +163,8 @@ namespace nanoFramework.M2Mqtt.Messages
             int remainingLength = 0;
             byte[] buffer;
             int indexUnsubsc = 0;
+            int varHeaderPropSize = 0;
+            byte[] userProperties = null;
 
             // topics list empty
             if ((Topics == null) || (Topics.Length == 0))
@@ -147,6 +174,17 @@ namespace nanoFramework.M2Mqtt.Messages
 
             // message identifier
             varHeaderSize += MESSAGE_ID_SIZE;
+
+            if (protocolVersion == MqttProtocolVersion.Version_5)
+            {
+                if (UserProperties.Count > 0)
+                {
+                    userProperties = EncodeDecodeHelper.EncodeUserProperties(UserProperties);
+                    varHeaderPropSize += userProperties.Length;
+                }
+
+                varHeaderSize += varHeaderPropSize + EncodeDecodeHelper.EncodeLength(varHeaderPropSize);
+            }
 
             int topicIdx;
             byte[][] topicsUtf8 = new byte[Topics.Length][];
@@ -182,7 +220,7 @@ namespace nanoFramework.M2Mqtt.Messages
             buffer = new byte[fixedHeaderSize + varHeaderSize + payloadSize];
 
             // first fixed header byte
-            if (protocolVersion == MqttProtocolVersion.Version_3_1_1)
+            if ((protocolVersion == MqttProtocolVersion.Version_3_1_1) || (protocolVersion == MqttProtocolVersion.Version_5))
             {
                 buffer[indexUnsubsc++] = ((byte)MqttMessageType.Unsubscribe << MSG_TYPE_OFFSET) | MQTT_MSG_UNSUBSCRIBE_FLAG_BITS; // [v.3.1.1]
             }
@@ -195,7 +233,7 @@ namespace nanoFramework.M2Mqtt.Messages
             }
 
             // encode remaining length
-            indexUnsubsc = this.EncodeVariableByte(remainingLength, buffer, indexUnsubsc);
+            indexUnsubsc = EncodeVariableByte(remainingLength, buffer, indexUnsubsc);
 
             // check message identifier assigned
             if (MessageId == 0)
@@ -205,6 +243,18 @@ namespace nanoFramework.M2Mqtt.Messages
 
             buffer[indexUnsubsc++] = (byte)((MessageId >> 8) & 0x00FF); // MSB
             buffer[indexUnsubsc++] = (byte)(MessageId & 0x00FF); // LSB 
+
+            // v5 specific
+            if (protocolVersion == MqttProtocolVersion.Version_5)
+            {
+                // Encode length and the properties
+                indexUnsubsc = EncodeVariableByte(varHeaderPropSize, buffer, indexUnsubsc);
+                if (userProperties != null)
+                {
+                    Array.Copy(userProperties, 0, buffer, indexUnsubsc, userProperties.Length);
+                    indexUnsubsc += userProperties.Length;
+                }
+            }
 
             for (topicIdx = 0; topicIdx < Topics.Length; topicIdx++)
             {

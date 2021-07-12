@@ -44,7 +44,7 @@ namespace nanoFramework.M2Mqtt.Messages
         {
             MqttMsgPingResp msg = new MqttMsgPingResp();
 
-            if (protocolVersion == MqttProtocolVersion.Version_3_1_1)
+            if ((protocolVersion == MqttProtocolVersion.Version_3_1_1) || (protocolVersion == MqttProtocolVersion.Version_5))
             {
                 // [v3.1.1] check flag bits
                 if ((fixedHeaderFirstByte & MSG_FLAG_BITS_MASK) != MQTT_MSG_PINGRESP_FLAG_BITS)
@@ -71,7 +71,7 @@ namespace nanoFramework.M2Mqtt.Messages
             int index = 0;
 
             // first fixed header byte
-            if (protocolVersion == MqttProtocolVersion.Version_3_1_1)
+            if ((protocolVersion == MqttProtocolVersion.Version_3_1_1) || (protocolVersion == MqttProtocolVersion.Version_5))
             {
                 buffer[index++] = ((byte)MqttMessageType.PingResponse << MSG_TYPE_OFFSET) | MQTT_MSG_PINGRESP_FLAG_BITS; // [v.3.1.1]
             }
