@@ -34,7 +34,7 @@ namespace nanoFramework.M2Mqtt.Messages
         /// </summary>
         public MqttMsgSuback()
         {
-            Type = MQTT_MSG_SUBACK_TYPE;
+            Type = MqttMessageType.SubscribeAck;
         }
 
         /// <summary>
@@ -44,13 +44,13 @@ namespace nanoFramework.M2Mqtt.Messages
         /// <param name="protocolVersion">MQTT Protocol Version</param>
         /// <param name="channel">Channel connected to the broker</param>
         /// <returns>SUBACK message instance</returns>
-        public static MqttMsgSuback Parse(byte fixedHeaderFirstByte, byte protocolVersion, IMqttNetworkChannel channel)
+        public static MqttMsgSuback Parse(byte fixedHeaderFirstByte, MqttProtocolVersion protocolVersion, IMqttNetworkChannel channel)
         {
             byte[] buffer;
             int index = 0;
             MqttMsgSuback msg = new MqttMsgSuback();
 
-            if (protocolVersion == MqttMsgConnect.PROTOCOL_VERSION_V3_1_1)
+            if (protocolVersion == MqttProtocolVersion.Version_3_1_1)
             {
                 // [v3.1.1] check flag bits
                 if ((fixedHeaderFirstByte & MSG_FLAG_BITS_MASK) != MQTT_MSG_SUBACK_FLAG_BITS)
@@ -86,7 +86,7 @@ namespace nanoFramework.M2Mqtt.Messages
         /// </summary>
         /// <param name="protocolVersion">MQTT protocol version</param>
         /// <returns>An array of bytes that represents the current object.</returns>
-        public override byte[] GetBytes(byte protocolVersion)
+        public override byte[] GetBytes(MqttProtocolVersion protocolVersion)
         {
             int fixedHeaderSize;
             int varHeaderSize = 0;
@@ -122,13 +122,13 @@ namespace nanoFramework.M2Mqtt.Messages
             buffer = new byte[fixedHeaderSize + varHeaderSize + payloadSize];
 
             // first fixed header byte
-            if (protocolVersion == MqttMsgConnect.PROTOCOL_VERSION_V3_1_1)
+            if (protocolVersion == MqttProtocolVersion.Version_3_1_1)
             {
-                buffer[index++] = (MQTT_MSG_SUBACK_TYPE << MSG_TYPE_OFFSET) | MQTT_MSG_SUBACK_FLAG_BITS; // [v.3.1.1]
+                buffer[index++] = ((byte)MqttMessageType.SubscribeAck << MSG_TYPE_OFFSET) | MQTT_MSG_SUBACK_FLAG_BITS; // [v.3.1.1]
             }
             else
             {
-                buffer[index++] = (byte)(MQTT_MSG_SUBACK_TYPE << MSG_TYPE_OFFSET);
+                buffer[index++] = (byte)MqttMessageType.SubscribeAck << MSG_TYPE_OFFSET;
             }
 
             // encode remaining length

@@ -29,7 +29,7 @@ namespace nanoFramework.M2Mqtt.Messages
         /// </summary>
         public MqttMsgDisconnect()
         {
-            Type = MQTT_MSG_DISCONNECT_TYPE;
+            Type = MqttMessageType.Disconnect;
         }
 
         /// <summary>
@@ -39,11 +39,11 @@ namespace nanoFramework.M2Mqtt.Messages
         /// <param name="protocolVersion">MQTT Protocol Version</param>
         /// <param name="channel">Channel connected to the broker</param>
         /// <returns>DISCONNECT message instance</returns>
-        public static MqttMsgDisconnect Parse(byte fixedHeaderFirstByte, byte protocolVersion, IMqttNetworkChannel channel)
+        public static MqttMsgDisconnect Parse(byte fixedHeaderFirstByte, MqttProtocolVersion protocolVersion, IMqttNetworkChannel channel)
         {
             MqttMsgDisconnect msg = new MqttMsgDisconnect();
 
-            if (protocolVersion == MqttMsgConnect.PROTOCOL_VERSION_V3_1_1)
+            if (protocolVersion == MqttProtocolVersion.Version_3_1_1)
             {
                 // [v3.1.1] check flag bits
                 if ((fixedHeaderFirstByte & MSG_FLAG_BITS_MASK) != MQTT_MSG_DISCONNECT_FLAG_BITS)
@@ -68,19 +68,19 @@ namespace nanoFramework.M2Mqtt.Messages
         /// </summary>
         /// <param name="protocolVersion">MQTT protocol version</param>
         /// <returns>An array of bytes that represents the current object.</returns>
-        public override byte[] GetBytes(byte protocolVersion)
+        public override byte[] GetBytes(MqttProtocolVersion protocolVersion)
         {
             byte[] buffer = new byte[2];
             int index = 0;
 
             // first fixed header byte
-            if (protocolVersion == MqttMsgConnect.PROTOCOL_VERSION_V3_1_1)
+            if (protocolVersion == MqttProtocolVersion.Version_3_1_1)
             {
-                buffer[index++] = (MQTT_MSG_DISCONNECT_TYPE << MSG_TYPE_OFFSET) | MQTT_MSG_DISCONNECT_FLAG_BITS; // [v.3.1.1]
+                buffer[index++] = ((byte)(MqttMessageType.Disconnect) << MSG_TYPE_OFFSET) | MQTT_MSG_DISCONNECT_FLAG_BITS; // [v.3.1.1]
             }
             else
             {
-                buffer[index++] = (MQTT_MSG_DISCONNECT_TYPE << MSG_TYPE_OFFSET);
+                buffer[index++] = ((byte)(MqttMessageType.Disconnect) << MSG_TYPE_OFFSET);
             }
 
             buffer[index] = 0x00;

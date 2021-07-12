@@ -41,7 +41,7 @@ namespace nanoFramework.M2Mqtt.Messages
         /// </summary>
         public MqttMsgPublish()
         {
-            Type = MQTT_MSG_PUBLISH_TYPE;
+            Type = MqttMessageType.Publish;
         }
 
         /// <summary>
@@ -68,7 +68,7 @@ namespace nanoFramework.M2Mqtt.Messages
             MqttQoSLevel qosLevel,
             bool retain) : base()
         {
-            Type = MQTT_MSG_PUBLISH_TYPE;
+            Type = MqttMessageType.Publish;
 
             Topic = topic;
             Message = message;
@@ -83,7 +83,7 @@ namespace nanoFramework.M2Mqtt.Messages
         /// </summary>
         /// <param name="protocolVersion">MQTT protocol version</param>
         /// <returns>An array of bytes that represents the current object.</returns>
-        public override byte[] GetBytes(byte protocolVersion)
+        public override byte[] GetBytes(MqttProtocolVersion protocolVersion)
         {
             int fixedHeaderSize;
             int varHeaderSize = 0;
@@ -147,7 +147,7 @@ namespace nanoFramework.M2Mqtt.Messages
             buffer = new byte[fixedHeaderSize + varHeaderSize + payloadSize];
 
             // first fixed header byte
-            buffer[index] = (byte)((MQTT_MSG_PUBLISH_TYPE << MSG_TYPE_OFFSET) |
+            buffer[index] = (byte)(((byte)MqttMessageType.Publish << MSG_TYPE_OFFSET) |
                                    ((byte)QosLevel << QOS_LEVEL_OFFSET));
             buffer[index] |= DupFlag ? (byte)(1 << DUP_FLAG_OFFSET) : (byte)0x00;
             buffer[index] |= Retain ? (byte)(1 << RETAIN_FLAG_OFFSET) : (byte)0x00;
@@ -193,7 +193,7 @@ namespace nanoFramework.M2Mqtt.Messages
         /// <param name="protocolVersion">MQTT Protocol Version</param>
         /// <param name="channel">Channel connected to the broker</param>
         /// <returns>PUBLISH message instance</returns>
-        public static MqttMsgPublish Parse(byte fixedHeaderFirstByte, byte protocolVersion, IMqttNetworkChannel channel)
+        public static MqttMsgPublish Parse(byte fixedHeaderFirstByte, MqttProtocolVersion protocolVersion, IMqttNetworkChannel channel)
         {
             byte[] buffer;
             int index = 0;

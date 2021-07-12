@@ -29,7 +29,7 @@ namespace nanoFramework.M2Mqtt.Messages
         /// </summary>
         public MqttMsgPubrec()
         {
-            Type = MQTT_MSG_PUBREC_TYPE;
+            Type = MqttMessageType.PublishReceived;
         }
 
         /// <summary>
@@ -37,7 +37,7 @@ namespace nanoFramework.M2Mqtt.Messages
         /// </summary>
         /// <param name="protocolVersion">MQTT protocol version</param>
         /// <returns>An array of bytes that represents the current object.</returns>
-        public override byte[] GetBytes(byte protocolVersion)
+        public override byte[] GetBytes(MqttProtocolVersion protocolVersion)
         {
             int fixedHeaderSize;
             int varHeaderSize = 0;
@@ -67,13 +67,13 @@ namespace nanoFramework.M2Mqtt.Messages
             buffer = new byte[fixedHeaderSize + varHeaderSize + payloadSize];
 
             // first fixed header byte
-            if (protocolVersion == MqttMsgConnect.PROTOCOL_VERSION_V3_1_1)
+            if (protocolVersion == MqttProtocolVersion.Version_3_1_1)
             {
-                buffer[indexPubrec++] = (MQTT_MSG_PUBREC_TYPE << MSG_TYPE_OFFSET) | MQTT_MSG_PUBREC_FLAG_BITS; // [v.3.1.1]
+                buffer[indexPubrec++] = ((byte)MqttMessageType.PublishReceived << MSG_TYPE_OFFSET) | MQTT_MSG_PUBREC_FLAG_BITS; // [v.3.1.1]
             }
             else
             {
-                buffer[indexPubrec++] = (MQTT_MSG_PUBREC_TYPE << MSG_TYPE_OFFSET);
+                buffer[indexPubrec++] = (byte)MqttMessageType.PublishReceived << MSG_TYPE_OFFSET;
             }
 
             // encode remaining length
@@ -93,13 +93,13 @@ namespace nanoFramework.M2Mqtt.Messages
         /// <param name="protocolVersion">MQTT Protocol Version</param>
         /// <param name="channel">Channel connected to the broker</param>
         /// <returns>PUBREC message instance</returns>
-        public static MqttMsgPubrec Parse(byte fixedHeaderFirstByte, byte protocolVersion, IMqttNetworkChannel channel)
+        public static MqttMsgPubrec Parse(byte fixedHeaderFirstByte, MqttProtocolVersion protocolVersion, IMqttNetworkChannel channel)
         {
             byte[] buffer;
             int index = 0;
             MqttMsgPubrec msg = new MqttMsgPubrec();
 
-            if (protocolVersion == MqttMsgConnect.PROTOCOL_VERSION_V3_1_1)
+            if (protocolVersion == MqttProtocolVersion.Version_3_1_1)
             {
                 // [v3.1.1] check flag bits
                 if ((fixedHeaderFirstByte & MSG_FLAG_BITS_MASK) != MQTT_MSG_PUBREC_FLAG_BITS)

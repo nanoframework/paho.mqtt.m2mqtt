@@ -29,7 +29,7 @@ namespace nanoFramework.M2Mqtt.Messages
         /// </summary>
         public MqttMsgPuback()
         {
-            Type = MQTT_MSG_PUBACK_TYPE;
+            Type = MqttMessageType.PublishAck;
         }
 
         /// <summary>
@@ -37,7 +37,7 @@ namespace nanoFramework.M2Mqtt.Messages
         /// </summary>
         /// <param name="protocolVersion">MQTT protocol version</param>
         /// <returns>An array of bytes that represents the current object.</returns>
-        public override byte[] GetBytes(byte protocolVersion)
+        public override byte[] GetBytes(MqttProtocolVersion protocolVersion)
         {
             int fixedHeaderSize;
             int varHeaderSize = 0;
@@ -67,13 +67,13 @@ namespace nanoFramework.M2Mqtt.Messages
             buffer = new byte[fixedHeaderSize + varHeaderSize + payloadSize];
 
             // first fixed header byte
-            if (protocolVersion == MqttMsgConnect.PROTOCOL_VERSION_V3_1_1)
+            if (protocolVersion == MqttProtocolVersion.Version_3_1_1)
             {
-                buffer[indexPuback++] = (MQTT_MSG_PUBACK_TYPE << MSG_TYPE_OFFSET) | MQTT_MSG_PUBACK_FLAG_BITS; // [v.3.1.1]
+                buffer[indexPuback++] = ((byte)MqttMessageType.PublishAck << MSG_TYPE_OFFSET) | MQTT_MSG_PUBACK_FLAG_BITS; // [v.3.1.1]
             }
             else
             {
-                buffer[indexPuback++] = MQTT_MSG_PUBACK_TYPE << MSG_TYPE_OFFSET;
+                buffer[indexPuback++] = (byte)MqttMessageType.PublishAck << MSG_TYPE_OFFSET;
             }
                               
             // encode remaining length
@@ -93,13 +93,13 @@ namespace nanoFramework.M2Mqtt.Messages
         /// <param name="protocolVersion">MQTT Protocol Version</param>
         /// <param name="channel">Channel connected to the broker</param>
         /// <returns>PUBACK message instance</returns>
-        public static MqttMsgPuback Parse(byte fixedHeaderFirstByte, byte protocolVersion, IMqttNetworkChannel channel)
+        public static MqttMsgPuback Parse(byte fixedHeaderFirstByte, MqttProtocolVersion protocolVersion, IMqttNetworkChannel channel)
         {
             byte[] buffer;
             int index = 0;
             MqttMsgPuback msg = new MqttMsgPuback();
 
-            if (protocolVersion == MqttMsgConnect.PROTOCOL_VERSION_V3_1_1)
+            if (protocolVersion == MqttProtocolVersion.Version_3_1_1)
             {
                 // [v3.1.1] check flag bits
                 if ((fixedHeaderFirstByte & MSG_FLAG_BITS_MASK) != MQTT_MSG_PUBACK_FLAG_BITS)
@@ -109,7 +109,7 @@ namespace nanoFramework.M2Mqtt.Messages
             }
 
             // get remaining length and allocate buffer
-            int remainingLength = MqttMsgBase.DecodeRemainingLength(channel);
+            int remainingLength = DecodeRemainingLength(channel);
             buffer = new byte[remainingLength];
 
             // read bytes from socket...

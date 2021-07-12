@@ -14,7 +14,7 @@
     <RootNamespace>nanoFramework.M2Mqtt</RootNamespace>
     <AssemblyName>nanoFramework.M2Mqtt</AssemblyName>
     <TargetFrameworkVersion>v1.0</TargetFrameworkVersion>
-    <AppDesignerFolder>Properties</AppDesignerFolder>        
+    <AppDesignerFolder>Properties</AppDesignerFolder>
     <DocumentationFile>bin\$(Configuration)\nanoFramework.M2Mqtt.xml</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup>
@@ -28,7 +28,10 @@
   </PropertyGroup>
   <Import Project="$(NanoFrameworkProjectSystemPath)NFProjectSystem.props" Condition="Exists('$(NanoFrameworkProjectSystemPath)NFProjectSystem.props')" />
   <ItemGroup>
+    <Compile Include="Messages\MqttMessageType.cs" />
+    <Compile Include="Messages\MqttProperty.cs" />
     <Compile Include="Messages\MqttQoSLevel.cs" />
+    <Compile Include="Messages\MqttReasonCode.cs" />
     <Compile Include="nanoFramework\Environment.cs" />
     <Compile Include="Exceptions\MqttClientException.cs" />
     <Compile Include="Exceptions\MqttCommunicationException.cs" />
@@ -70,7 +73,7 @@
     <Compile Include="Session\MqttClientSession.cs" />
     <Compile Include="Session\MqttSession.cs" />
     <Compile Include="Utility\QueueExtension.cs" />
-    <Compile Include="Utility\Trace.cs" />
+    <Compile Include="Utility\EncodeDecodeHelper.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="mscorlib, Version=1.10.5.0, Culture=neutral, PublicKeyToken=c07d481e9758c731">

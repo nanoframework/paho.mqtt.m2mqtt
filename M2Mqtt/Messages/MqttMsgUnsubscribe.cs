@@ -37,7 +37,7 @@ namespace nanoFramework.M2Mqtt.Messages
         /// </summary>
         public MqttMsgUnsubscribe()
         {
-            Type = MQTT_MSG_UNSUBSCRIBE_TYPE;
+            Type = MqttMessageType.Unsubscribe;
         }
 
         /// <summary>
@@ -46,7 +46,7 @@ namespace nanoFramework.M2Mqtt.Messages
         /// <param name="topics">List of topics to unsubscribe</param>
         public MqttMsgUnsubscribe(string[] topics)
         {
-            Type = MQTT_MSG_UNSUBSCRIBE_TYPE;
+            Type = MqttMessageType.Unsubscribe;
 
             Topics = topics;
 
@@ -61,7 +61,7 @@ namespace nanoFramework.M2Mqtt.Messages
         /// <param name="protocolVersion">MQTT Protocol Version</param>
         /// <param name="channel">Channel connected to the broker</param>
         /// <returns>UNSUBSCRIBE message instance</returns>
-        public static MqttMsgUnsubscribe Parse(byte fixedHeaderFirstByte, byte protocolVersion, IMqttNetworkChannel channel)
+        public static MqttMsgUnsubscribe Parse(byte fixedHeaderFirstByte, MqttProtocolVersion protocolVersion, IMqttNetworkChannel channel)
         {
             byte[] buffer;
             int indexUnsub = 0;
@@ -69,7 +69,7 @@ namespace nanoFramework.M2Mqtt.Messages
             int topicUtf8Length;
             MqttMsgUnsubscribe msg = new MqttMsgUnsubscribe();
 
-            if (protocolVersion == MqttMsgConnect.PROTOCOL_VERSION_V3_1_1)
+            if (protocolVersion == MqttProtocolVersion.Version_3_1_1)
             {
                 // [v3.1.1] check flag bits
                 if ((fixedHeaderFirstByte & MSG_FLAG_BITS_MASK) != MQTT_MSG_UNSUBSCRIBE_FLAG_BITS)
@@ -85,7 +85,7 @@ namespace nanoFramework.M2Mqtt.Messages
             // read bytes from socket...
             int received = channel.Receive(buffer);
 
-            if (protocolVersion == MqttMsgConnect.PROTOCOL_VERSION_V3_1)
+            if (protocolVersion == MqttProtocolVersion.Version_3_1)
             {
                 // only 3.1.0
                 // read QoS level from fixed header
@@ -130,7 +130,7 @@ namespace nanoFramework.M2Mqtt.Messages
         /// </summary>
         /// <param name="protocolVersion">MQTT protocol version</param>
         /// <returns>An array of bytes that represents the current object.</returns>
-        public override byte[] GetBytes(byte protocolVersion)
+        public override byte[] GetBytes(MqttProtocolVersion protocolVersion)
         {
             int fixedHeaderSize;
             int varHeaderSize = 0;
@@ -182,13 +182,13 @@ namespace nanoFramework.M2Mqtt.Messages
             buffer = new byte[fixedHeaderSize + varHeaderSize + payloadSize];
 
             // first fixed header byte
-            if (protocolVersion == MqttMsgConnect.PROTOCOL_VERSION_V3_1_1)
+            if (protocolVersion == MqttProtocolVersion.Version_3_1_1)
             {
-                buffer[indexUnsubsc++] = (MQTT_MSG_UNSUBSCRIBE_TYPE << MSG_TYPE_OFFSET) | MQTT_MSG_UNSUBSCRIBE_FLAG_BITS; // [v.3.1.1]
+                buffer[indexUnsubsc++] = ((byte)MqttMessageType.Unsubscribe << MSG_TYPE_OFFSET) | MQTT_MSG_UNSUBSCRIBE_FLAG_BITS; // [v.3.1.1]
             }
             else
             {
-                buffer[indexUnsubsc] = (byte)((MQTT_MSG_UNSUBSCRIBE_TYPE << MSG_TYPE_OFFSET) |
+                buffer[indexUnsubsc] = (byte)(((byte)MqttMessageType.Unsubscribe << MSG_TYPE_OFFSET) |
                                    ((byte)QosLevel << QOS_LEVEL_OFFSET));
                 buffer[indexUnsubsc] |= DupFlag ? (byte)(1 << DUP_FLAG_OFFSET) : (byte)0x00;
                 indexUnsubsc++;

@@ -29,7 +29,7 @@ namespace nanoFramework.M2Mqtt.Messages
         /// </summary>
         public MqttMsgPubrel()
         {
-            Type = MQTT_MSG_PUBREL_TYPE;
+            Type = MqttMessageType.PublishRelease;
             // PUBREL message use QoS Level 1 (not "officially" in 3.1.1)
             QosLevel = MqttQoSLevel.AtLeastOnce;
         }
@@ -39,7 +39,7 @@ namespace nanoFramework.M2Mqtt.Messages
         /// </summary>
         /// <param name="protocolVersion">MQTT protocol version</param>
         /// <returns>An array of bytes that represents the current object.</returns>
-        public override byte[] GetBytes(byte protocolVersion)
+        public override byte[] GetBytes(MqttProtocolVersion protocolVersion)
         {
             int fixedHeaderSize;
             int varHeaderSize = 0;
@@ -69,13 +69,13 @@ namespace nanoFramework.M2Mqtt.Messages
             buffer = new byte[fixedHeaderSize + varHeaderSize + payloadSize];
 
             // first fixed header byte
-            if (protocolVersion == MqttMsgConnect.PROTOCOL_VERSION_V3_1_1)
+            if (protocolVersion == MqttProtocolVersion.Version_3_1_1)
             {
-                buffer[indexPubrel++] = (MQTT_MSG_PUBREL_TYPE << MSG_TYPE_OFFSET) | MQTT_MSG_PUBREL_FLAG_BITS; // [v.3.1.1]
+                buffer[indexPubrel++] = ((byte)MqttMessageType.PublishRelease << MSG_TYPE_OFFSET) | MQTT_MSG_PUBREL_FLAG_BITS; // [v.3.1.1]
             }
             else
             {
-                buffer[indexPubrel] = (byte)((MQTT_MSG_PUBREL_TYPE << MSG_TYPE_OFFSET) |
+                buffer[indexPubrel] = (byte)(((byte)MqttMessageType.PublishRelease << MSG_TYPE_OFFSET) |
                                    ((byte)QosLevel << QOS_LEVEL_OFFSET));
                 buffer[indexPubrel] |= DupFlag ? (byte)(1 << DUP_FLAG_OFFSET) : (byte)0x00;
                 indexPubrel++;
@@ -98,13 +98,13 @@ namespace nanoFramework.M2Mqtt.Messages
         /// <param name="protocolVersion">MQTT Protocol Version</param>
         /// <param name="channel">Channel connected to the broker</param>
         /// <returns>PUBREL message instance</returns>
-        public static MqttMsgPubrel Parse(byte fixedHeaderFirstByte, byte protocolVersion, IMqttNetworkChannel channel)
+        public static MqttMsgPubrel Parse(byte fixedHeaderFirstByte, MqttProtocolVersion protocolVersion, IMqttNetworkChannel channel)
         {
             byte[] buffer;
             int index = 0;
             MqttMsgPubrel msg = new MqttMsgPubrel();
 
-            if (protocolVersion == MqttMsgConnect.PROTOCOL_VERSION_V3_1_1)
+            if (protocolVersion == MqttProtocolVersion.Version_3_1_1)
             {
                 // [v3.1.1] check flag bits
                 if ((fixedHeaderFirstByte & MSG_FLAG_BITS_MASK) != MQTT_MSG_PUBREL_FLAG_BITS)
@@ -120,7 +120,7 @@ namespace nanoFramework.M2Mqtt.Messages
             // read bytes from socket...
             channel.Receive(buffer);
 
-            if (protocolVersion == MqttMsgConnect.PROTOCOL_VERSION_V3_1)
+            if (protocolVersion == MqttProtocolVersion.Version_3_1)
             {
                 // only 3.1.0
 

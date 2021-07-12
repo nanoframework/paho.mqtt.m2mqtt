@@ -22,6 +22,7 @@ using nanoFramework.M2Mqtt.Session;
 using nanoFramework.M2Mqtt.Utility;
 using System;
 using System.Collections;
+using System.Diagnostics;
 using System.IO;
 using System.Net.Sockets;
 using System.Security.Cryptography.X509Certificates;
@@ -176,6 +177,9 @@ namespace nanoFramework.M2Mqtt
         /// </summary>
         public MqttSettings Settings => _settings;
 
+        //V5.0 Only properties
+
+
         /// <summary>
         /// Constructor
         /// </summary>
@@ -251,7 +255,7 @@ namespace nanoFramework.M2Mqtt
         /// </summary>
         /// <param name="clientId">Client identifier</param>
         /// <returns>Return code of CONNACK message from broker</returns>
-        public byte Connect(string clientId)
+        public MqttReasonCode Connect(string clientId)
         {
             return Connect(clientId, null, null, false, MqttQoSLevel.AtMostOnce, false, null, null, true, MqttMsgConnect.KEEP_ALIVE_PERIOD_DEFAULT);
         }
@@ -262,7 +266,7 @@ namespace nanoFramework.M2Mqtt
         /// <param name="clientId">Client identifier</param>
         /// <param name="cleanSession">Clean sessione flag</param>
         /// <returns>Return code of CONNACK message from broker</returns>
-        public byte Connect(string clientId,
+        public MqttReasonCode Connect(string clientId,
             bool cleanSession)
         {
             return Connect(clientId, null, null, false, MqttQoSLevel.AtMostOnce, false, null, null, cleanSession, MqttMsgConnect.KEEP_ALIVE_PERIOD_DEFAULT);
@@ -275,7 +279,7 @@ namespace nanoFramework.M2Mqtt
         /// <param name="username">Username</param>
         /// <param name="password">Password</param>
         /// <returns>Return code of CONNACK message from broker</returns>
-        public byte Connect(string clientId,
+        public MqttReasonCode Connect(string clientId,
             string username,
             string password)
         {
@@ -291,7 +295,7 @@ namespace nanoFramework.M2Mqtt
         /// <param name="cleanSession">Clean sessione flag</param>
         /// <param name="keepAlivePeriod">Keep alive period</param>
         /// <returns>Return code of CONNACK message from broker</returns>
-        public byte Connect(string clientId,
+        public MqttReasonCode Connect(string clientId,
             string username,
             string password,
             bool cleanSession,
@@ -314,7 +318,7 @@ namespace nanoFramework.M2Mqtt
         /// <param name="cleanSession">Clean sessione flag</param>
         /// <param name="keepAlivePeriod">Keep alive period</param>
         /// <returns>Return code of CONNACK message from broker</returns>
-        public byte Connect(string clientId,
+        public MqttReasonCode Connect(string clientId,
             string username,
             string password,
             bool willRetain,
@@ -336,7 +340,7 @@ namespace nanoFramework.M2Mqtt
                 willMessage,
                 cleanSession,
                 keepAlivePeriod,
-                (byte)ProtocolVersion);
+                ProtocolVersion);
 
             try
             {
@@ -360,7 +364,7 @@ namespace nanoFramework.M2Mqtt
 
             MqttMsgConnack connack = (MqttMsgConnack)SendReceive(connect);
             // if connection accepted, start keep alive timer and 
-            if (connack.ReturnCode == MqttMsgConnack.CONN_ACCEPTED)
+            if (connack.ReturnCode == MqttReasonCode.Success)
             {
                 // set all client properties
                 ClientId = clientId;
@@ -461,7 +465,7 @@ namespace nanoFramework.M2Mqtt
             catch (Exception e)
             {
 
-                MqttUtility.Trace.WriteLine(TraceLevel.Error, "Exception occurred: {0}", e.ToString());
+                Debug.WriteLine($"Exception occurred: {e}");
 #else
             catch (Exception)
             {
@@ -646,7 +650,7 @@ namespace nanoFramework.M2Mqtt
             catch (Exception e)
             {
 #if DEBUG
-                MqttUtility.Trace.WriteLine(TraceLevel.Error, "Exception occurred: {0}", e.ToString());
+                Debug.WriteLine($"Exception occurred: {e}");
 #endif
 
                 throw new MqttCommunicationException(e);
@@ -660,9 +664,9 @@ namespace nanoFramework.M2Mqtt
         private void Send(MqttMsgBase msg)
         {
 #if DEBUG
-            MqttUtility.Trace.WriteLine(TraceLevel.Frame, "SEND {0}", msg);
+            Debug.WriteLine($"SEND {msg}");
 #endif
-            Send(msg.GetBytes((byte)ProtocolVersion));
+            Send(msg.GetBytes(ProtocolVersion));
         }
 
         /// <summary>
@@ -686,7 +690,7 @@ namespace nanoFramework.M2Mqtt
             catch (Exception e)
             {
 #if DEBUG
-                MqttUtility.Trace.WriteLine(TraceLevel.Error, "Exception occurred: {0}", e.ToString());
+                Debug.WriteLine($"Exception occurred: {e}");
 #endif
 
                 throw new MqttCommunicationException(e);
@@ -732,9 +736,9 @@ namespace nanoFramework.M2Mqtt
         private MqttMsgBase SendReceive(MqttMsgBase msg, int timeout)
         {
 #if DEBUG
-            MqttUtility.Trace.WriteLine(TraceLevel.Frame, "SEND {0}", msg);
+            Debug.WriteLine($"SEND {msg}");
 #endif
-            return SendReceive(msg.GetBytes((byte)ProtocolVersion), timeout);
+            return SendReceive(msg.GetBytes(ProtocolVersion), timeout);
         }
 
         /// <summary>
@@ -749,7 +753,7 @@ namespace nanoFramework.M2Mqtt
             bool enqueue = true;
 
             // if it is a PUBLISH message with QoS Level 2
-            if ((msg.Type == MqttMsgBase.MQTT_MSG_PUBLISH_TYPE) &&
+            if ((msg.Type == MqttMessageType.Publish) &&
                 (msg.QosLevel == MqttQoSLevel.ExactlyOnce))
             {
                 lock (_inflightQueue)
@@ -802,11 +806,11 @@ namespace nanoFramework.M2Mqtt
 
                 // [v3.1.1] SUBSCRIBE and UNSUBSCRIBE aren't "officially" QOS = 1
                 //          so QueuedQos1 state isn't valid for them
-                if (msg.Type == MqttMsgBase.MQTT_MSG_SUBSCRIBE_TYPE)
+                if (msg.Type == MqttMessageType.Subscribe)
                 {
                     state = MqttMsgState.SendSubscribe;
                 }
-                else if (msg.Type == MqttMsgBase.MQTT_MSG_UNSUBSCRIBE_TYPE)
+                else if (msg.Type == MqttMessageType.Unsubscribe)
                 {
                     state = MqttMsgState.SendUnsubscribe;
                 }
@@ -831,11 +835,11 @@ namespace nanoFramework.M2Mqtt
                         _inflightQueue.Enqueue(msgContext);
 
 #if DEBUG
-                        MqttUtility.Trace.WriteLine(TraceLevel.Queuing, "enqueued {0}", msg);
+                        Debug.WriteLine($"enqueued {msg}");
 #endif
 
                         // PUBLISH message
-                        if (msg.Type == MqttMsgBase.MQTT_MSG_PUBLISH_TYPE)
+                        if (msg.Type == MqttMessageType.Publish)
                         {
                             // to publish and QoS level 1 or 2
                             if ((msgContext.Flow == MqttMsgFlow.ToPublish) &&
@@ -876,7 +880,7 @@ namespace nanoFramework.M2Mqtt
             bool enqueue = true;
 
             // if it is a PUBREL message (for QoS Level 2)
-            if (msg.Type == MqttMsgBase.MQTT_MSG_PUBREL_TYPE)
+            if (msg.Type == MqttMessageType.PublishRelease)
             {
                 lock (_inflightQueue)
                 {
@@ -905,7 +909,7 @@ namespace nanoFramework.M2Mqtt
                 }
             }
             // if it is a PUBCOMP message (for QoS Level 2)
-            else if (msg.Type == MqttMsgBase.MQTT_MSG_PUBCOMP_TYPE)
+            else if (msg.Type == MqttMessageType.PublishComplete)
             {
                 lock (_inflightQueue)
                 {
@@ -926,7 +930,7 @@ namespace nanoFramework.M2Mqtt
                 }
             }
             // if it is a PUBREC message (for QoS Level 2)
-            else if (msg.Type == MqttMsgBase.MQTT_MSG_PUBREC_TYPE)
+            else if (msg.Type == MqttMessageType.PublishReceived)
             {
                 lock (_inflightQueue)
                 {
@@ -953,7 +957,7 @@ namespace nanoFramework.M2Mqtt
                 {
                     _internalQueue.Enqueue(msg);
 #if DEBUG
-                    MqttUtility.Trace.WriteLine(TraceLevel.Queuing, "enqueued {0}", msg);
+                    Debug.WriteLine($"enqueued {msg}");
 #endif
                     _inflightWaitHandle.Set();
                 }
@@ -967,7 +971,7 @@ namespace nanoFramework.M2Mqtt
         {
             int readBytes = 0;
             byte[] fixedHeaderFirstByte = new byte[1];
-            byte msgType;
+            MqttMessageType msgType;
 
             while (_isRunning)
             {
@@ -979,48 +983,48 @@ namespace nanoFramework.M2Mqtt
                     if (readBytes > 0)
                     {
                         // extract message type from received byte
-                        msgType = (byte)((fixedHeaderFirstByte[0] & MqttMsgBase.MSG_TYPE_MASK) >> MqttMsgBase.MSG_TYPE_OFFSET);
+                        msgType = (MqttMessageType)((fixedHeaderFirstByte[0] & MqttMsgBase.MSG_TYPE_MASK) >> MqttMsgBase.MSG_TYPE_OFFSET);
 
                         switch (msgType)
                         {
                             // CONNECT message received
-                            case MqttMsgBase.MQTT_MSG_CONNECT_TYPE:
+                            case MqttMessageType.Connect:
                                 throw new MqttClientException(MqttClientErrorCode.WrongBrokerMessage);
 
                             // CONNACK message received
-                            case MqttMsgBase.MQTT_MSG_CONNACK_TYPE:
+                            case MqttMessageType.ConnectAck:
 
-                                _msgReceived = MqttMsgConnack.Parse(fixedHeaderFirstByte[0], (byte)ProtocolVersion, _channel);
+                                _msgReceived = MqttMsgConnack.Parse(fixedHeaderFirstByte[0], ProtocolVersion, _channel);
 #if DEBUG
-                                MqttUtility.Trace.WriteLine(TraceLevel.Frame, "RECV {0}", _msgReceived);
+                                Debug.WriteLine($"RECV {_msgReceived}");
 #endif
                                 _syncEndReceiving.Set();
                                 break;
 
                             // PINGREQ message received
-                            case MqttMsgBase.MQTT_MSG_PINGREQ_TYPE:
+                            case MqttMessageType.PingRequest:
                                 throw new MqttClientException(MqttClientErrorCode.WrongBrokerMessage);
 
                             // PINGRESP message received
-                            case MqttMsgBase.MQTT_MSG_PINGRESP_TYPE:
+                            case MqttMessageType.PingResponse:
 
-                                _msgReceived = MqttMsgPingResp.Parse(fixedHeaderFirstByte[0], (byte)ProtocolVersion, _channel);
+                                _msgReceived = MqttMsgPingResp.Parse(fixedHeaderFirstByte[0], ProtocolVersion, _channel);
 #if DEBUG
-                                MqttUtility.Trace.WriteLine(TraceLevel.Frame, "RECV {0}", _msgReceived);
+                                Debug.WriteLine($"RECV {_msgReceived}");
 #endif
                                 _syncEndReceiving.Set();
                                 break;
 
                             // SUBSCRIBE message received
-                            case MqttMsgBase.MQTT_MSG_SUBSCRIBE_TYPE:
+                            case MqttMessageType.Subscribe:
                                 throw new MqttClientException(MqttClientErrorCode.WrongBrokerMessage);
 
                             // SUBACK message received
-                            case MqttMsgBase.MQTT_MSG_SUBACK_TYPE:
+                            case MqttMessageType.SubscribeAck:
                                 // enqueue SUBACK message received (for QoS Level 1) into the internal queue
-                                MqttMsgSuback suback = MqttMsgSuback.Parse(fixedHeaderFirstByte[0], (byte)ProtocolVersion, _channel);
+                                MqttMsgSuback suback = MqttMsgSuback.Parse(fixedHeaderFirstByte[0], ProtocolVersion, _channel);
 #if DEBUG
-                                MqttUtility.Trace.WriteLine(TraceLevel.Frame, "RECV {0}", suback);
+                                Debug.WriteLine($"RECV {suback}");
 #endif
 
                                 // enqueue SUBACK message into the internal queue
@@ -1029,11 +1033,11 @@ namespace nanoFramework.M2Mqtt
                                 break;
 
                             // PUBLISH message received
-                            case MqttMsgBase.MQTT_MSG_PUBLISH_TYPE:
+                            case MqttMessageType.Publish:
 
-                                MqttMsgPublish publish = MqttMsgPublish.Parse(fixedHeaderFirstByte[0], (byte)ProtocolVersion, _channel);
+                                MqttMsgPublish publish = MqttMsgPublish.Parse(fixedHeaderFirstByte[0], ProtocolVersion, _channel);
 #if DEBUG
-                                MqttUtility.Trace.WriteLine(TraceLevel.Frame, "RECV {0}", publish);
+                                Debug.WriteLine($"RECV {publish}");
 #endif
 
                                 // enqueue PUBLISH message to acknowledge into the inflight queue
@@ -1042,12 +1046,12 @@ namespace nanoFramework.M2Mqtt
                                 break;
 
                             // PUBACK message received
-                            case MqttMsgBase.MQTT_MSG_PUBACK_TYPE:
+                            case MqttMessageType.PublishAck:
 
                                 // enqueue PUBACK message received (for QoS Level 1) into the internal queue
-                                MqttMsgPuback puback = MqttMsgPuback.Parse(fixedHeaderFirstByte[0], (byte)ProtocolVersion, _channel);
+                                MqttMsgPuback puback = MqttMsgPuback.Parse(fixedHeaderFirstByte[0], ProtocolVersion, _channel);
 #if DEBUG
-                                MqttUtility.Trace.WriteLine(TraceLevel.Frame, "RECV {0}", puback);
+                                Debug.WriteLine($"RECV {puback}");
 #endif
 
                                 // enqueue PUBACK message into the internal queue
@@ -1056,12 +1060,12 @@ namespace nanoFramework.M2Mqtt
                                 break;
 
                             // PUBREC message received
-                            case MqttMsgBase.MQTT_MSG_PUBREC_TYPE:
+                            case MqttMessageType.PublishReceived:
 
                                 // enqueue PUBREC message received (for QoS Level 2) into the internal queue
-                                MqttMsgPubrec pubrec = MqttMsgPubrec.Parse(fixedHeaderFirstByte[0], (byte)ProtocolVersion, _channel);
+                                MqttMsgPubrec pubrec = MqttMsgPubrec.Parse(fixedHeaderFirstByte[0], ProtocolVersion, _channel);
 #if DEBUG
-                                MqttUtility.Trace.WriteLine(TraceLevel.Frame, "RECV {0}", pubrec);
+                                Debug.WriteLine($"RECV {pubrec}");
 #endif
 
                                 // enqueue PUBREC message into the internal queue
@@ -1070,12 +1074,12 @@ namespace nanoFramework.M2Mqtt
                                 break;
 
                             // PUBREL message received
-                            case MqttMsgBase.MQTT_MSG_PUBREL_TYPE:
+                            case MqttMessageType.PublishRelease:
 
                                 // enqueue PUBREL message received (for QoS Level 2) into the internal queue
-                                MqttMsgPubrel pubrel = MqttMsgPubrel.Parse(fixedHeaderFirstByte[0], (byte)ProtocolVersion, _channel);
+                                MqttMsgPubrel pubrel = MqttMsgPubrel.Parse(fixedHeaderFirstByte[0], ProtocolVersion, _channel);
 #if DEBUG
-                                MqttUtility.Trace.WriteLine(TraceLevel.Frame, "RECV {0}", pubrel);
+                                Debug.WriteLine($"RECV {pubrel}");
 #endif
 
                                 // enqueue PUBREL message into the internal queue
@@ -1084,12 +1088,12 @@ namespace nanoFramework.M2Mqtt
                                 break;
 
                             // PUBCOMP message received
-                            case MqttMsgBase.MQTT_MSG_PUBCOMP_TYPE:
+                            case MqttMessageType.PublishComplete:
 
                                 // enqueue PUBCOMP message received (for QoS Level 2) into the internal queue
-                                MqttMsgPubcomp pubcomp = MqttMsgPubcomp.Parse(fixedHeaderFirstByte[0], (byte)ProtocolVersion, _channel);
+                                MqttMsgPubcomp pubcomp = MqttMsgPubcomp.Parse(fixedHeaderFirstByte[0], ProtocolVersion, _channel);
 #if DEBUG
-                                MqttUtility.Trace.WriteLine(TraceLevel.Frame, "RECV {0}", pubcomp);
+                                Debug.WriteLine($"RECV {pubcomp}");
 #endif
 
                                 // enqueue PUBCOMP message into the internal queue
@@ -1098,15 +1102,15 @@ namespace nanoFramework.M2Mqtt
                                 break;
 
                             // UNSUBSCRIBE message received
-                            case MqttMsgBase.MQTT_MSG_UNSUBSCRIBE_TYPE:
+                            case MqttMessageType.Unsubscribe:
                                 throw new MqttClientException(MqttClientErrorCode.WrongBrokerMessage);
 
                             // UNSUBACK message received
-                            case MqttMsgBase.MQTT_MSG_UNSUBACK_TYPE:
+                            case MqttMessageType.UnsubscribeAck:
                                 // enqueue UNSUBACK message received (for QoS Level 1) into the internal queue
-                                MqttMsgUnsuback unsuback = MqttMsgUnsuback.Parse(fixedHeaderFirstByte[0], (byte)ProtocolVersion, _channel);
+                                MqttMsgUnsuback unsuback = MqttMsgUnsuback.Parse(fixedHeaderFirstByte[0], ProtocolVersion, _channel);
 #if DEBUG
-                                MqttUtility.Trace.WriteLine(TraceLevel.Frame, "RECV {0}", unsuback);
+                                Debug.WriteLine($"RECV {unsuback}");
 #endif
 
                                 // enqueue UNSUBACK message into the internal queue
@@ -1115,7 +1119,7 @@ namespace nanoFramework.M2Mqtt
                                 break;
 
                             // DISCONNECT message received
-                            case MqttMsgDisconnect.MQTT_MSG_DISCONNECT_TYPE:
+                            case MqttMessageType.Disconnect:
                                 throw new MqttClientException(MqttClientErrorCode.WrongBrokerMessage);
 
                             default:
@@ -1134,7 +1138,7 @@ namespace nanoFramework.M2Mqtt
                 catch (Exception e)
                 {
 #if DEBUG
-                    MqttUtility.Trace.WriteLine(TraceLevel.Error, "Exception occurred: {0}", e.ToString());
+                    Debug.WriteLine($"Exception occurred: {e}");
 #endif
                     _exReceiving = new MqttCommunicationException(e);
 
@@ -1233,22 +1237,22 @@ namespace nanoFramework.M2Mqtt
                             switch (msg.Type)
                             {
                                 // CONNECT message received
-                                case MqttMsgBase.MQTT_MSG_CONNECT_TYPE:
+                                case MqttMessageType.Connect:
                                     throw new MqttClientException(MqttClientErrorCode.WrongBrokerMessage);
 
                                 // SUBSCRIBE message received
-                                case MqttMsgBase.MQTT_MSG_SUBSCRIBE_TYPE:
+                                case MqttMessageType.Subscribe:
                                     throw new MqttClientException(MqttClientErrorCode.WrongBrokerMessage);
 
                                 // SUBACK message received
-                                case MqttMsgBase.MQTT_MSG_SUBACK_TYPE:
+                                case MqttMessageType.SubscribeAck:
 
                                     // raise subscribed topic event (SUBACK message received)
                                     OnMqttMsgSubscribed((MqttMsgSuback)msg);
                                     break;
 
                                 // PUBLISH message received
-                                case MqttMsgBase.MQTT_MSG_PUBLISH_TYPE:
+                                case MqttMessageType.Publish:
 
                                     // PUBLISH message received in a published internal event, no publish succeeded
                                     if (internalEvent.GetType() == typeof(MsgPublishedInternalEvent))
@@ -1259,7 +1263,7 @@ namespace nanoFramework.M2Mqtt
                                     break;
 
                                 // PUBACK message received
-                                case MqttMsgBase.MQTT_MSG_PUBACK_TYPE:
+                                case MqttMessageType.PublishAck:
 
                                     // raise published message event
                                     // (PUBACK received for QoS Level 1)
@@ -1267,7 +1271,7 @@ namespace nanoFramework.M2Mqtt
                                     break;
 
                                 // PUBREL message received
-                                case MqttMsgBase.MQTT_MSG_PUBREL_TYPE:
+                                case MqttMessageType.PublishRelease:
 
                                     // raise message received event 
                                     // (PUBREL received for QoS Level 2)
@@ -1275,7 +1279,7 @@ namespace nanoFramework.M2Mqtt
                                     break;
 
                                 // PUBCOMP message received
-                                case MqttMsgBase.MQTT_MSG_PUBCOMP_TYPE:
+                                case MqttMessageType.PublishComplete:
 
                                     // raise published message event
                                     // (PUBCOMP received for QoS Level 2)
@@ -1283,18 +1287,18 @@ namespace nanoFramework.M2Mqtt
                                     break;
 
                                 // UNSUBSCRIBE message received from client
-                                case MqttMsgBase.MQTT_MSG_UNSUBSCRIBE_TYPE:
+                                case MqttMessageType.Unsubscribe:
                                     throw new MqttClientException(MqttClientErrorCode.WrongBrokerMessage);
 
                                 // UNSUBACK message received
-                                case MqttMsgBase.MQTT_MSG_UNSUBACK_TYPE:
+                                case MqttMessageType.UnsubscribeAck:
 
                                     // raise unsubscribed topic event
                                     OnMqttMsgUnsubscribed(msg.MessageId);
                                     break;
 
                                 // DISCONNECT message received from client
-                                case MqttMsgDisconnect.MQTT_MSG_DISCONNECT_TYPE:
+                                case MqttMessageType.Disconnect:
                                     throw new MqttClientException(MqttClientErrorCode.WrongBrokerMessage);
                             }
                         }
@@ -1389,7 +1393,7 @@ namespace nanoFramework.M2Mqtt
                                         }
 
 #if DEBUG
-                                        MqttUtility.Trace.WriteLine(TraceLevel.Queuing, "processed {0}", msgInflight);
+                                        Debug.WriteLine($"processed {msgInflight}");
 #endif
                                         break;
 
@@ -1404,7 +1408,7 @@ namespace nanoFramework.M2Mqtt
                                             msgContext.Timestamp = Environment.TickCount;
                                             msgContext.Attempt++;
 
-                                            if (msgInflight.Type == MqttMsgBase.MQTT_MSG_PUBLISH_TYPE)
+                                            if (msgInflight.Type == MqttMessageType.Publish)
                                             {
                                                 // PUBLISH message to send, wait for PUBACK
                                                 msgContext.State = MqttMsgState.WaitForPuback;
@@ -1412,10 +1416,10 @@ namespace nanoFramework.M2Mqtt
                                                 if (msgContext.Attempt > 1)
                                                     msgInflight.DupFlag = true;
                                             }
-                                            else if (msgInflight.Type == MqttMsgBase.MQTT_MSG_SUBSCRIBE_TYPE)
+                                            else if (msgInflight.Type == MqttMessageType.Subscribe)
                                                 // SUBSCRIBE message to send, wait for SUBACK
                                                 msgContext.State = MqttMsgState.WaitForSuback;
-                                            else if (msgInflight.Type == MqttMsgBase.MQTT_MSG_UNSUBSCRIBE_TYPE)
+                                            else if (msgInflight.Type == MqttMessageType.Unsubscribe)
                                                 // UNSUBSCRIBE message to send, wait for UNSUBACK
                                                 msgContext.State = MqttMsgState.WaitForUnsuback;
 
@@ -1442,7 +1446,7 @@ namespace nanoFramework.M2Mqtt
                                             OnInternalEvent(internalEvent);
 
 #if DEBUG
-                                            MqttUtility.Trace.WriteLine(TraceLevel.Queuing, "processed {0}", msgInflight);
+                                            Debug.WriteLine($"processed {msgInflight}");
 #endif
                                         }
                                         break;
@@ -1504,9 +1508,9 @@ namespace nanoFramework.M2Mqtt
                                             if (msgReceived != null)
                                             {
                                                 // PUBACK message or SUBACK/UNSUBACK message for the current message
-                                                if (((msgReceived.Type == MqttMsgBase.MQTT_MSG_PUBACK_TYPE) && (msgInflight.Type == MqttMsgBase.MQTT_MSG_PUBLISH_TYPE) && (msgReceived.MessageId == msgInflight.MessageId)) ||
-                                                    ((msgReceived.Type == MqttMsgBase.MQTT_MSG_SUBACK_TYPE) && (msgInflight.Type == MqttMsgBase.MQTT_MSG_SUBSCRIBE_TYPE) && (msgReceived.MessageId == msgInflight.MessageId)) ||
-                                                    ((msgReceived.Type == MqttMsgBase.MQTT_MSG_UNSUBACK_TYPE) && (msgInflight.Type == MqttMsgBase.MQTT_MSG_UNSUBSCRIBE_TYPE) && (msgReceived.MessageId == msgInflight.MessageId)))
+                                                if (((msgReceived.Type == MqttMessageType.PublishAck) && (msgInflight.Type == MqttMessageType.Publish) && (msgReceived.MessageId == msgInflight.MessageId)) ||
+                                                    ((msgReceived.Type == MqttMessageType.SubscribeAck) && (msgInflight.Type == MqttMessageType.Subscribe) && (msgReceived.MessageId == msgInflight.MessageId)) ||
+                                                    ((msgReceived.Type == MqttMessageType.UnsubscribeAck) && (msgInflight.Type == MqttMessageType.Unsubscribe) && (msgReceived.MessageId == msgInflight.MessageId)))
                                                 {
                                                     lock (_internalQueue)
                                                     {
@@ -1515,12 +1519,12 @@ namespace nanoFramework.M2Mqtt
                                                         acknowledge = true;
                                                         msgReceivedProcessed = true;
 #if DEBUG
-                                                        MqttUtility.Trace.WriteLine(TraceLevel.Queuing, "dequeued {0}", msgReceived);
+                                                        Debug.WriteLine($"dequeued {msgReceived}");
 #endif
                                                     }
 
                                                     // if PUBACK received, confirm published with flag
-                                                    if (msgReceived.Type == MqttMsgBase.MQTT_MSG_PUBACK_TYPE)
+                                                    if (msgReceived.Type == MqttMessageType.PublishAck)
                                                         internalEvent = new MsgPublishedInternalEvent(msgReceived, true);
                                                     else
                                                         internalEvent = new MsgInternalEvent(msgReceived);
@@ -1529,7 +1533,7 @@ namespace nanoFramework.M2Mqtt
                                                     OnInternalEvent(internalEvent);
 
                                                     // PUBACK received for PUBLISH message with QoS Level 1, remove from session state
-                                                    if ((msgInflight.Type == MqttMsgBase.MQTT_MSG_PUBLISH_TYPE) &&
+                                                    if ((msgInflight.Type == MqttMessageType.Publish) &&
                                                         (_session != null) &&
                                                         (_session.InflightMessages.Contains(msgContext.Key)))
                                                     {
@@ -1537,7 +1541,7 @@ namespace nanoFramework.M2Mqtt
                                                     }
 
 #if DEBUG
-                                                    MqttUtility.Trace.WriteLine(TraceLevel.Queuing, "processed {0}", msgInflight);
+                                                    Debug.WriteLine($"processed {msgInflight}");
 #endif
                                                 }
                                             }
@@ -1565,7 +1569,7 @@ namespace nanoFramework.M2Mqtt
                                                     else
                                                     {
                                                         // if PUBACK for a PUBLISH message not received after retries, raise event for not published
-                                                        if (msgInflight.Type == MqttMsgBase.MQTT_MSG_PUBLISH_TYPE)
+                                                        if (msgInflight.Type == MqttMessageType.Publish)
                                                         {
                                                             // PUBACK not received in time, PUBLISH retries failed, need to remove from session inflight messages too
                                                             if ((_session != null) &&
@@ -1609,7 +1613,7 @@ namespace nanoFramework.M2Mqtt
                                             }
 
                                             // it is a PUBREC message
-                                            if ((msgReceived != null) && (msgReceived.Type == MqttMsgBase.MQTT_MSG_PUBREC_TYPE))
+                                            if ((msgReceived != null) && (msgReceived.Type == MqttMessageType.PublishReceived))
                                             {
                                                 // PUBREC message for the current PUBLISH message, send PUBREL, wait for PUBCOMP
                                                 if (msgReceived.MessageId == msgInflight.MessageId)
@@ -1621,7 +1625,7 @@ namespace nanoFramework.M2Mqtt
                                                         acknowledge = true;
                                                         msgReceivedProcessed = true;
 #if DEBUG
-                                                        MqttUtility.Trace.WriteLine(TraceLevel.Queuing, "dequeued {0}", msgReceived);
+                                                        Debug.WriteLine($"dequeued {msgReceived}");
 #endif
                                                     }
 
@@ -1702,7 +1706,7 @@ namespace nanoFramework.M2Mqtt
                                             }
 
                                             // it is a PUBREL message
-                                            if ((msgReceived != null) && (msgReceived.Type == MqttMsgBase.MQTT_MSG_PUBREL_TYPE))
+                                            if ((msgReceived != null) && (msgReceived.Type == MqttMessageType.PublishRelease))
                                             {
                                                 // PUBREL message for the current message, send PUBCOMP
                                                 if (msgReceived.MessageId == msgInflight.MessageId)
@@ -1713,7 +1717,7 @@ namespace nanoFramework.M2Mqtt
                                                         _internalQueue.Dequeue();
                                                         msgReceivedProcessed = true;
 #if DEBUG
-                                                        MqttUtility.Trace.WriteLine(TraceLevel.Queuing, "dequeued {0}", msgReceived);
+                                                        Debug.WriteLine($"dequeued {msgReceived}");
 #endif
                                                     }
 
@@ -1729,7 +1733,7 @@ namespace nanoFramework.M2Mqtt
                                                     OnInternalEvent(internalEvent);
 
                                                     // PUBREL received (and PUBCOMP sent) for PUBLISH message with QoS Level 2, remove from session state
-                                                    if ((msgInflight.Type == MqttMsgBase.MQTT_MSG_PUBLISH_TYPE) &&
+                                                    if ((msgInflight.Type == MqttMessageType.Publish) &&
                                                         (_session != null) &&
                                                         (_session.InflightMessages.Contains(msgContext.Key)))
                                                     {
@@ -1737,7 +1741,7 @@ namespace nanoFramework.M2Mqtt
                                                     }
 
 #if DEBUG
-                                                    MqttUtility.Trace.WriteLine(TraceLevel.Queuing, "processed {0}", msgInflight);
+                                                    Debug.WriteLine($"processed {msgInflight}");
 #endif
                                                 }
                                                 else
@@ -1767,7 +1771,7 @@ namespace nanoFramework.M2Mqtt
                                             }
 
                                             // it is a PUBCOMP message
-                                            if ((msgReceived != null) && (msgReceived.Type == MqttMsgBase.MQTT_MSG_PUBCOMP_TYPE))
+                                            if ((msgReceived != null) && (msgReceived.Type == MqttMessageType.PublishComplete))
                                             {
                                                 // PUBCOMP message for the current message
                                                 if (msgReceived.MessageId == msgInflight.MessageId)
@@ -1779,7 +1783,7 @@ namespace nanoFramework.M2Mqtt
                                                         acknowledge = true;
                                                         msgReceivedProcessed = true;
 #if DEBUG
-                                                        MqttUtility.Trace.WriteLine(TraceLevel.Queuing, "dequeued {0}", msgReceived);
+                                                        Debug.WriteLine($"dequeued {msgReceived}");
 #endif
                                                     }
 
@@ -1788,7 +1792,7 @@ namespace nanoFramework.M2Mqtt
                                                     OnInternalEvent(internalEvent);
 
                                                     // PUBCOMP received for PUBLISH message with QoS Level 2, remove from session state
-                                                    if ((msgInflight.Type == MqttMsgBase.MQTT_MSG_PUBLISH_TYPE) &&
+                                                    if ((msgInflight.Type == MqttMessageType.Publish) &&
                                                         (_session != null) &&
                                                         (_session.InflightMessages.Contains(msgContext.Key)))
                                                     {
@@ -1796,12 +1800,12 @@ namespace nanoFramework.M2Mqtt
                                                     }
 
 #if DEBUG
-                                                    MqttUtility.Trace.WriteLine(TraceLevel.Queuing, "processed {0}", msgInflight);
+                                                    Debug.WriteLine($"processed {msgInflight}");
 #endif
                                                 }
                                             }
                                             // it is a PUBREC message
-                                            else if ((msgReceived != null) && (msgReceived.Type == MqttMsgBase.MQTT_MSG_PUBREC_TYPE))
+                                            else if ((msgReceived != null) && (msgReceived.Type == MqttMessageType.PublishReceived))
                                             {
                                                 // another PUBREC message for the current message due to a retransmitted PUBLISH
                                                 // I'm in waiting for PUBCOMP, so I can discard this PUBREC
@@ -1814,7 +1818,7 @@ namespace nanoFramework.M2Mqtt
                                                         acknowledge = true;
                                                         msgReceivedProcessed = true;
 #if DEBUG
-                                                        MqttUtility.Trace.WriteLine(TraceLevel.Queuing, "dequeued {0}", msgReceived);
+                                                        Debug.WriteLine($"dequeued {msgReceived}");
 #endif
 
                                                         // re-enqueue message
@@ -1925,7 +1929,7 @@ namespace nanoFramework.M2Mqtt
                             {
                                 _internalQueue.Dequeue();
 #if DEBUG
-                                MqttUtility.Trace.WriteLine(TraceLevel.Queuing, "dequeued {0} orphan", msgReceived);
+                                Debug.WriteLine($"dequeued {msgReceived} orphan");
 #endif
                             }
                         }
@@ -1945,7 +1949,7 @@ namespace nanoFramework.M2Mqtt
                     _inflightQueue.Enqueue(msgContext);
 
 #if DEBUG
-                MqttUtility.Trace.WriteLine(TraceLevel.Error, "Exception occurred: {0}", e.ToString());
+                Debug.WriteLine($"Exception occurred: {e}");
 #endif
 
                 // raise disconnection client event
@@ -1971,7 +1975,7 @@ namespace nanoFramework.M2Mqtt
                             _inflightQueue.Enqueue(msgContext);
 
                             // if it is a PUBLISH message to publish
-                            if ((msgContext.Message.Type == MqttMsgBase.MQTT_MSG_PUBLISH_TYPE) &&
+                            if ((msgContext.Message.Type == MqttMessageType.Publish) &&
                                 (msgContext.Flow == MqttMsgFlow.ToPublish))
                             {
                                 // it's QoS 1 and we haven't received PUBACK
@@ -2051,7 +2055,7 @@ namespace nanoFramework.M2Mqtt
             internal bool Find(object item)
             {
                 MqttMsgContext msgCtx = (MqttMsgContext)item;
-                return ((msgCtx.Message.Type == MqttMsgBase.MQTT_MSG_PUBLISH_TYPE) &&
+                return ((msgCtx.Message.Type == MqttMessageType.Publish) &&
                         (msgCtx.Message.MessageId == MessageId) &&
                         msgCtx.Flow == Flow);
 
@@ -2067,10 +2071,16 @@ namespace nanoFramework.M2Mqtt
         /// <summary>
         /// MQTT protocol version 3.1
         /// </summary>
-        Version_3_1 = MqttMsgConnect.PROTOCOL_VERSION_V3_1,
+        Version_3_1 = 0x03,
+        
         /// <summary>
         /// MQTT protocol version 3.1.1
         /// </summary>
-        Version_3_1_1 = MqttMsgConnect.PROTOCOL_VERSION_V3_1_1
+        Version_3_1_1 = 0x04,
+
+        /// <summary>
+        /// MQTT protocol version 5.0
+        /// </summary>
+        Version_5 = 0x05,
     }
 }
