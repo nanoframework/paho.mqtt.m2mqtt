@@ -103,8 +103,7 @@ namespace nanoFramework.M2Mqtt.Messages
         /// <summary>
         /// User Property, v5.0 only
         /// </summary>
-        public ArrayList UserProperties { get; set; } = new ArrayList();
-
+        public ArrayList UserProperties { get; internal set; } = new ArrayList();
 
         /// <summary>
         /// Maximum Packet Size, v5.0 only

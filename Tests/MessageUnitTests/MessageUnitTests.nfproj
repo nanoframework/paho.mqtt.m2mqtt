@@ -27,6 +27,7 @@
     <RunSettingsFilePath>$(MSBuildProjectDirectory)\nano.runsettings</RunSettingsFilePath>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="AuthenticationTests.cs" />
     <Compile Include="ConnackTests.cs" />
     <Compile Include="ConnectTests.cs" />
     <Compile Include="DisconnectTests.cs" />

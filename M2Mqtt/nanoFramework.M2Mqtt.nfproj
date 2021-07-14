@@ -28,7 +28,10 @@
   </PropertyGroup>
   <Import Project="$(NanoFrameworkProjectSystemPath)NFProjectSystem.props" Condition="Exists('$(NanoFrameworkProjectSystemPath)NFProjectSystem.props')" />
   <ItemGroup>
+    <Compile Include="Messages\ConnectionOpenedEventArgs.cs" />
     <Compile Include="Messages\MqttMessageType.cs" />
+    <Compile Include="Messages\MqttMsgAuthentication.cs" />
+    <Compile Include="Messages\MqttMsgAuthenticationEventArgs.cs" />
     <Compile Include="Messages\MqttProperty.cs" />
     <Compile Include="Messages\MqttQoSLevel.cs" />
     <Compile Include="Messages\MqttReasonCode.cs" />

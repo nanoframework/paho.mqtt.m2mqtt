@@ -84,9 +84,8 @@ namespace nanoFramework.M2Mqtt
         // connection is closing due to peer
         private bool _isConnectionClosing;
 
-
         /// <summary>
-        /// Delagate that defines event handler for PUBLISH message received
+        /// Delegate that defines event handler for PUBLISH message received
         /// </summary>
         public delegate void MqttMsgPublishEventHandler(object sender, MqttMsgPublishEventArgs e);
 
@@ -96,17 +95,27 @@ namespace nanoFramework.M2Mqtt
         public delegate void MqttMsgPublishedEventHandler(object sender, MqttMsgPublishedEventArgs e);
 
         /// <summary>
-        /// Delagate that defines event handler for subscribed topic
+        /// Delegate that defines event handler for subscribed topic
         /// </summary>
         public delegate void MqttMsgSubscribedEventHandler(object sender, MqttMsgSubscribedEventArgs e);
 
         /// <summary>
-        /// Delagate that defines event handler for unsubscribed topic
+        /// Delegate that defines event handler for unsubscribed topic
         /// </summary>
         public delegate void MqttMsgUnsubscribedEventHandler(object sender, MqttMsgUnsubscribedEventArgs e);
 
         /// <summary>
-        /// Delegate that defines event handler for cliet/peer disconnection
+        /// Delegate that defines event handler for authentication topic, v5.0 only
+        /// </summary>
+        public delegate void MqttMsgAuthenticationEventHandler(object sender, MqttMsgAuthenticationEventArgs e);
+
+        /// <summary>
+        /// Delegate that defines event handler for unsubscribed topic
+        /// </summary>
+        public delegate void ConnectionOpenedEventHandler(object sender, ConnectionOpenedEventArgs e);
+
+        /// <summary>
+        /// Delegate that defines event handler for client/peer disconnection
         /// </summary>
         public delegate void ConnectionClosedEventHandler(object sender, EventArgs e);
 
@@ -130,7 +139,17 @@ namespace nanoFramework.M2Mqtt
         /// <summary>
         /// The event for peer/client disconnection
         /// </summary>
+        public event ConnectionOpenedEventHandler ConnectionOpened;
+
+        /// <summary>
+        /// The event for peer/client disconnection
+        /// </summary>
         public event ConnectionClosedEventHandler ConnectionClosed;
+
+        /// <summary>
+        /// The event for peer/client disconnection
+        /// </summary>
+        public event MqttMsgAuthenticationEventHandler Authentication;
 
         /// <summary>
         /// Connection status between client and broker
@@ -171,6 +190,56 @@ namespace nanoFramework.M2Mqtt
         /// MQTT protocol version
         /// </summary>
         public MqttProtocolVersion ProtocolVersion { get; set; }
+
+        /// <summary>
+        /// Authentication Method, v5.0 only
+        /// </summary>
+        public string AuthenticationMethod { get; set; }
+
+        /// <summary>
+        /// Authentication Data, v5.0 only
+        /// </summary>
+        public byte[] AuthenticationData { get; set; }
+
+        /// <summary>
+        /// Session Expiry Interval, v5.0 only
+        /// </summary>
+        public uint SessionExpiryInterval { get; set; }
+
+        /// <summary>
+        /// Request Problem Information, v5.0 only
+        /// </summary>
+        public bool RequestProblemInformation { get; set; }
+
+        /// <summary>
+        /// Request Response Information, v5.0 only
+        /// </summary>
+        public bool RequestResponseInformation { get; set; }
+
+        /// <summary>
+        /// ReceiveMaximum, v5.0 only
+        /// </summary>
+        public ushort ReceiveMaximum { get; set; } = ushort.MaxValue;
+
+        /// <summary>
+        /// TopicAliasMaximum, v5.0 only
+        /// </summary>
+        public ushort TopicAliasMaximum { get; set; }
+
+        /// <summary>
+        /// Will Delay Interval, v5.0 only
+        /// </summary>
+        public uint WillDelayInterval { get; set; }
+
+        /// <summary>
+        /// User Property, v5.0 only
+        /// </summary>
+        public ArrayList UserProperties { get; internal set; } = new ArrayList();
+
+        /// <summary>
+        /// Maximum Packet Size, v5.0 only
+        /// </summary>
+        public uint MaximumPacketSize { get; set; }
 
         /// <summary>
         /// MQTT client settings
@@ -362,40 +431,66 @@ namespace nanoFramework.M2Mqtt
             // start thread for receiving messages from broker
             Fx.StartThread(ReceiveThread);
 
-            MqttMsgConnack connack = (MqttMsgConnack)SendReceive(connect);
-            // if connection accepted, start keep alive timer and 
-            if (connack.ReturnCode == MqttReasonCode.Success)
+            // Set the properties for v5
+            if (ProtocolVersion == MqttProtocolVersion.Version_5)
             {
-                // set all client properties
-                ClientId = clientId;
-                CleanSession = cleanSession;
-                WillFlag = willFlag;
-                WillTopic = willTopic;
-                WillMessage = willMessage;
-                WillQosLevel = willQosLevel;
-
-                _keepAlivePeriod = keepAlivePeriod * 1000; // convert in ms
-
-                // restore previous session
-                RestoreSession();
-
-                // keep alive period equals zero means turning off keep alive mechanism
-                if (_keepAlivePeriod != 0)
-                {
-                    // start thread for sending keep alive message to the broker
-                    Fx.StartThread(KeepAliveThread);
-                }
-
-                // start thread for raising received message event from broker
-                Fx.StartThread(DispatchEventThread);
-
-                // start thread for handling inflight messages queue to broker asynchronously (publish and acknowledge)
-                Fx.StartThread(ProcessInflightThread);
-
-                IsConnected = true;
+                connect.AuthenticationData = AuthenticationData;
+                connect.AuthenticationMethod = AuthenticationMethod;
+                connect.MaximumPacketSize = MaximumPacketSize;
+                connect.ReceiveMaximum = ReceiveMaximum;
+                connect.RequestProblemInformation = RequestProblemInformation;
+                connect.RequestResponseInformation = RequestResponseInformation;
+                connect.SessionExpiryInterval = SessionExpiryInterval;
+                connect.TopicAliasMaximum = TopicAliasMaximum;
+                connect.UserProperties = UserProperties;
             }
 
-            return connack.ReturnCode;
+            MqttMsgConnack connack;
+            // In v5 case the authentication method is not empty, we will wait for that AUTH message
+            // The client **must** subscribe to the Authentication event and mange this.
+            if ((ProtocolVersion == MqttProtocolVersion.Version_5) && (!string.IsNullOrEmpty(AuthenticationMethod)))
+            {
+                Send(connect);
+                return MqttReasonCode.Success;
+            }
+            else
+            {
+                connack = (MqttMsgConnack)SendReceive(connect);
+
+                // if connection accepted, start keep alive timer and 
+                if (connack.ReturnCode == MqttReasonCode.Success)
+                {
+                    // set all client properties
+                    ClientId = clientId;
+                    CleanSession = cleanSession;
+                    WillFlag = willFlag;
+                    WillTopic = willTopic;
+                    WillMessage = willMessage;
+                    WillQosLevel = willQosLevel;
+
+                    _keepAlivePeriod = keepAlivePeriod * 1000; // convert in ms
+
+                    // restore previous session
+                    RestoreSession();
+
+                    // keep alive period equals zero means turning off keep alive mechanism
+                    if (_keepAlivePeriod != 0)
+                    {
+                        // start thread for sending keep alive message to the broker
+                        Fx.StartThread(KeepAliveThread);
+                    }
+
+                    // start thread for raising received message event from broker
+                    Fx.StartThread(DispatchEventThread);
+
+                    // start thread for handling inflight messages queue to broker asynchronously (publish and acknowledge)
+                    Fx.StartThread(ProcessInflightThread);
+
+                    IsConnected = true;
+                }
+
+                return connack.ReturnCode;
+            }
         }
 
         /// <summary>
@@ -625,6 +720,16 @@ namespace nanoFramework.M2Mqtt
                 new MqttMsgUnsubscribedEventArgs(messageId));
         }
 
+        private void OnMqttMsgAuthentication(MqttMsgAuthentication authentication)
+        {
+            Authentication?.Invoke(this, new MqttMsgAuthenticationEventArgs(authentication));
+        }
+
+        private void OnMqttMsgConnack(MqttMsgConnack connack)
+        {
+            ConnectionOpened?.Invoke(this, new ConnectionOpenedEventArgs(connack));
+        }
+
         /// <summary>
         /// Wrapper method for peer/client disconnection
         /// </summary>
@@ -751,6 +856,29 @@ namespace nanoFramework.M2Mqtt
         {
             // enqueue is needed (or not)
             bool enqueue = true;
+
+            // Authentication is special flow and can reproduce
+            if ((flow == MqttMsgFlow.ToPublish) && (msg.Type == MqttMessageType.Authentication))
+            {
+                MqttMsgContext msgContext = new MqttMsgContext()
+                {
+                    Message = msg,
+                    State = MqttMsgState.WaitForAuthentication,
+                    Flow = flow,
+                    Attempt = 0
+                };
+                lock (_inflightQueue)
+                {
+                    // enqueue message and unlock send thread
+                    _inflightQueue.Enqueue(msgContext);
+                }
+#if DEBUG
+                Debug.WriteLine($"enqueued authentication message {msg}");
+#endif
+
+                _inflightWaitHandle.Set();
+                return enqueue;
+            }
 
             // if it is a PUBLISH message with QoS Level 2
             if ((msg.Type == MqttMessageType.Publish) &&
@@ -997,7 +1125,8 @@ namespace nanoFramework.M2Mqtt
                                 _msgReceived = MqttMsgConnack.Parse(fixedHeaderFirstByte[0], ProtocolVersion, _channel);
 #if DEBUG
                                 Debug.WriteLine($"RECV {_msgReceived}");
-#endif
+#endif                                
+                                OnMqttMsgConnack((MqttMsgConnack)_msgReceived);
                                 _syncEndReceiving.Set();
                                 break;
 
@@ -1122,6 +1251,13 @@ namespace nanoFramework.M2Mqtt
                             case MqttMessageType.Disconnect:
                                 throw new MqttClientException(MqttClientErrorCode.WrongBrokerMessage);
 
+                            case MqttMessageType.Authentication:
+                                MqttMsgAuthentication authentication = MqttMsgAuthentication.Parse(fixedHeaderFirstByte[0], ProtocolVersion, _channel);
+#if DEBUG
+                                Debug.WriteLine($"AUTH {authentication}");
+#endif
+                                EnqueueInternal(authentication);
+                                break;
                             default:
                                 throw new MqttClientException(MqttClientErrorCode.WrongBrokerMessage);
                         }
@@ -1300,6 +1436,11 @@ namespace nanoFramework.M2Mqtt
                                 // DISCONNECT message received from client
                                 case MqttMessageType.Disconnect:
                                     throw new MqttClientException(MqttClientErrorCode.WrongBrokerMessage);
+                                
+                                    // AUTH message received
+                                case MqttMessageType.Authentication:
+                                    OnMqttMsgAuthentication((MqttMsgAuthentication)msg);
+                                    break;
                             }
                         }
                     }
@@ -2072,7 +2213,7 @@ namespace nanoFramework.M2Mqtt
         /// MQTT protocol version 3.1
         /// </summary>
         Version_3_1 = 0x03,
-        
+
         /// <summary>
         /// MQTT protocol version 3.1.1
         /// </summary>
